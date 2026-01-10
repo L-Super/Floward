@@ -13,6 +13,8 @@
         <file>resources/images/home-white.svg</file>
         <file>resources/images/sync-white.svg</file>
         <file>resources/images/keyboard-white.svg</file>
+        <file>resources/images/tray-online.svg</file>
+        <file>resources/images/tray-offline.svg</file>
         <file>resources/icon.svg</file>
         <file>resources/icon.png</file>
         <file>resources/icon-for-mac.png</file>

@@ -356,8 +356,20 @@ bool Clipboard::InitSyncServer() {
         spdlog::error("Websocket received data has exception. {}", e.what());
       }
     });
-    connect(sync.get(), &SyncServer::syncConnected, [] {});
-    connect(sync.get(), &SyncServer::syncDisconnected, [] {});
+    connect(sync.get(), &SyncServer::syncConnected, [this] {
+      if (sync) {
+        if (sync->isLoggedIn()) {
+          trayIcon->setIcon(QIcon(":/resources/images/tray-online.svg"));
+        } else {
+          trayIcon->setIcon(QIcon(":/resources/images/tray-offline.svg"));
+        }
+      }
+      qDebug() << "syncConnected";
+    });
+    connect(sync.get(), &SyncServer::syncDisconnected, [this] {
+      trayIcon->setIcon(QIcon(":/resources/images/tray-offline.svg"));
+      qDebug() << "syncDisconnected";
+    });
     connect(sync.get(), &SyncServer::syncError, [] {});
 
     if (!sync->setToken(QString::fromStdString(userInfo.value().token))) {

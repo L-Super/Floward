@@ -110,7 +110,7 @@ std::optional<QRect> GetFocusCaretPosition() {
     // if (AccessibleObjectFromWindowFn(activeWnd, OBJID_CARET, IID_IAccessible, reinterpret_cast<void**>(&pAcc)) ==
     //         S_OK &&
     //     pAcc)
-    if (AccessibleObjectFromWindow(activeWnd, OBJID_CARET, IID_IAccessible, reinterpret_cast<void**>(&pAcc)) == S_OK &&
+    if (AccessibleObjectFromWindow(focusWnd, OBJID_CARET, IID_IAccessible, reinterpret_cast<void**>(&pAcc)) == S_OK &&
         pAcc) {
       long left = 0, top = 0, width = 0, height = 0;
       VARIANT varCaret;
@@ -144,13 +144,13 @@ std::optional<QRect> GetFocusCaretPosition() {
     }
 
     if (!IsRectEmpty(&guiThreadInfo.rcCaret)) {
-      POINT pt;
-      pt.x = guiThreadInfo.rcCaret.left;
-      pt.y = guiThreadInfo.rcCaret.top;
-      ClientToScreen(focusWnd, &pt);
+      auto rect = guiThreadInfo.rcCaret;
+      // Convert Rect to screen coordinates
+      MapWindowPoints(guiThreadInfo.hwndCaret, nullptr, reinterpret_cast<POINT*>(&rect), 2);
 
-      qDebug() << "GetGUIThreadInfo" << pt.x << pt.y;
-      return QRect{pt.x, pt.y, guiThreadInfo.rcCaret.right, guiThreadInfo.rcCaret.bottom};
+      // Note: if Rect width is 10, but QRect width is 11
+      // The precision error is acceptable here
+      return QRect{rect.left,rect.top, rect.right, rect.bottom};
     }
   } while (false);
 

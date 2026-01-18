@@ -5,6 +5,8 @@
 
 A cross-platform clipboard management tool based on Qt, supporting multi-device synchronization. You can select items from clipboard history for pasting. It provides an easy way to view clipboard history and quickly paste any previously copied content.
 
+![](images/screenshot2.png)
+
 ## Features
 
 - 📋 Local clipboard management
@@ -13,73 +15,48 @@ A cross-platform clipboard management tool based on Qt, supporting multi-device 
 - ⚡ Global hotkey support, customizable(default is `Alt + V`)
 - 🎯 Runs in system tray
 
-## Build Requirements
+## Use Cases
+
+Floward is particularly suitable for the following scenarios:
+
+- 💻 **Multi-device Workflow**: Copy code snippets on desktop, paste directly on laptop
+- 🎨 **Design Workflow**: Copy images on one device, use immediately on another without manual transfer
+- 📝 **Remote Work**: Seamlessly share clipboard content across devices in different locations
+- 🔐 **Data Security**: Ensure sensitive data doesn't pass through third-party services by self-hosting the server
+
+## Build
+Build Requirements:
 
 - C++ 20
 - Qt 6.0+
+- CMake
 
-## Build
 
 ```bash
 cmake -B build
 cmake --build build
 ```
 
-## Sync Server Setup
+## Client Configuration
 
-This application requires a sync server to enable multi-device synchronization. You can deploy your own server using [ClipboardServer](https://github.com/L-Super/ClipboardServer).
-### Docker Deployment
-#### Quick Start with Docker Compose
+This application requires a sync server to enable multi-device synchronization. You can deploy your own server using [ClipboardServer](https://github.com/L-Super/ClipboardServer). For detailed information about server deployment and configuration, please refer to the ClipboardServer project documentation.
 
-1. Clone the ClipboardServer repository:
-```bash
-git clone https://github.com/L-Super/ClipboardServer.git
-cd ClipboardServer
-```
+### Configure Sync Server
 
-2. Start the server:
-```bash
-docker compose up -d --build
-```
+**Method 1:**
 
-3. Access the web interface:
-   - Open your browser and visit: `http://localhost:8000`
-   - Register a new account or login
-   - Configure the server URL in the application settings
+1. Run Floward
+2. Open the sync server web service URL
+3. Enter your account credentials to login
 
-### Manual Installation
+**Method 2:**
 
-1. Install dependencies:
-```bash
-# Using uv
-uv sync
-```
+1. Run Floward, open Floward Settings - Sync
+2. Enter the server URL, e.g.: `https://your-domain.com`
+3. Click Login, which will open the web page
+4. Enter your account credentials to login
 
-2. Start the server:
-```bash
-# Development environment
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-
-# Production environment (background)
-nohup uv run uvicorn main:app --host 0.0.0.0 --port 8000 &
-```
-
-3. Access the web interface at `http://localhost:8000`
-
-### Environment Variables
-
-Common environment variables (can also be set in `.env` file):
-
-- `SECRET_KEY`: JWT secret key (change to a random value in production)
-- `DATABASE_URL`: Database connection string (default: `sqlite:///data/clipboard.db`)
-- `TZ`: Container timezone (e.g., `Asia/Shanghai`)
-
-The service exposes port `8000` by default. If there's a port conflict, adjust the port mapping in `docker-compose.yml` (e.g., `18000:8000`).
-
-### Configure the Application
-
-After setting up the sync server, configure the application with:
-- Server URL: `http://your-server-ip:8000` (or `https://your-domain.com` if using SSL)
+After configuration, the application will automatically connect to the server and start synchronizing clipboard data.
 
 ## Contributing
 

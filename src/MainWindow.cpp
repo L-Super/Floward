@@ -139,11 +139,12 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow
   //         [this](const QKeySequence &keySequence) { qDebug() << "keySequenceChanged" << keySequence; });
   connect(ui->loginButton, &QPushButton::clicked, this, [this]() {
     spdlog::info("Login button clicked");
-    if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
-      QDesktopServices::openUrl(QUrl(QString::fromStdString(url.value())));
+    auto lineEditText = ui->urlLineEdit->text();
+    if (!lineEditText.isEmpty()) {
+      QDesktopServices::openUrl(QUrl(lineEditText));
     }
-    else if (!ui->urlLineEdit->text().isEmpty()) {
-      QDesktopServices::openUrl(QUrl(ui->urlLineEdit->text()));
+    else if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
+      QDesktopServices::openUrl(QUrl(QString::fromStdString(url.value())));
     }
     else {
       ui->tipsLabel->setText("<span style='color:red;'>服务器 URL 不存在!</span>");
@@ -184,16 +185,19 @@ void MainWindow::SetHotkey(QHotkey* hotkey) {
 }
 
 void MainWindow::SetOnlineStatus(bool online) {
+  QString statusText = online ? "<span style='color:green;'>在线</span>"
+                                           : "<span style='color:red;'>离线</span>";
   auto userInfo = Config::instance().getUserInfo();
-  if (online && userInfo.has_value()) {
+  if (userInfo.has_value()) {
     QString user = QString::fromStdString(userInfo.value().email);
 
     ui->accountLabel->setText(user);
-    ui->accountStatusLabel->setText("<span style='color:green;'>在线</span>");
+    ui->accountStatusLabel->setText(statusText);
     QString deviceName = QString::fromStdString(userInfo.value().device_name);
     ui->deviceNameLineEdit->setPlaceholderText(deviceName);
     options.deviceName = deviceName;
-    ui->loginButton->hide();
+    // if online, hide login button
+    ui->loginButton->setVisible(!online);
 
     if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
       QString value = QString::fromStdString(url.value());
@@ -203,7 +207,7 @@ void MainWindow::SetOnlineStatus(bool online) {
   }
   else {
     ui->accountLabel->clear();
-    ui->accountStatusLabel->setText("<span style='color:red;'>离线</span>");
+    ui->accountStatusLabel->setText(statusText);
     ui->loginButton->show();
   }
 }

@@ -24,7 +24,17 @@ Floward is particularly suitable for the following scenarios:
 - 📝 **Remote Work**: Seamlessly share clipboard content across devices in different locations
 - 🔐 **Data Security**: Ensure sensitive data doesn't pass through third-party services by self-hosting the server
 
+## Version Information
+
+[Releases](https://github.com/L-Super/Floward/releases) provides two versions with the following differences:
+
+| Version     | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| Standalone  | Local only. Data stays on your device. No internet required. |
+| Sync        | Supports multi-device synchronization. Syncs data across different devices. |
+
 ## Build
+
 Build Requirements:
 
 - C++ 20

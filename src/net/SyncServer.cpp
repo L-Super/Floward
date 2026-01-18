@@ -124,7 +124,13 @@ bool SyncServer::verifyTokenValid(const QString& token) {
 
   auto onFinished = [&](bool success, const QString& message) {
     ok = success;
-    spdlog::info("Token verified, result:{} error:{}", ok, message);
+
+    if (ok) {
+      spdlog::info("Token verified successfully");
+    } else {
+      spdlog::warn("Token verification failed: {}", message);
+    }
+
     if (loop.isRunning())
       loop.quit();
   };

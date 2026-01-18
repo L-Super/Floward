@@ -111,9 +111,19 @@ void Clipboard::DataChanged() {
   qDebug() << "mime data type:" << mimeData->formats();
 
   sourceInfo.timestamp = QDateTime::currentDateTime();
-  sourceInfo.processPath = utils::GetClipboardSourceAppPath();
-  sourceInfo.processName = utils::GetAppName(sourceInfo.processPath);
-  sourceInfo.icon = utils::GetAppIcon(sourceInfo.processPath);
+  
+  if (ignoreNetDataChange) {
+    // data from server sync
+    sourceInfo.processPath = {};
+    sourceInfo.processName = "来自同步";
+    sourceInfo.icon = QIcon(":/resources/images/sync.svg");
+  }
+  else {
+    // 数据来自本地应用程序
+    sourceInfo.processPath = utils::GetClipboardSourceAppPath();
+    sourceInfo.processName = utils::GetAppName(sourceInfo.processPath);
+    sourceInfo.icon = utils::GetAppIcon(sourceInfo.processPath);
+  }
 
   if (mimeData->hasText()) {
     const QString latestText = mimeData->text();
@@ -146,12 +156,13 @@ void Clipboard::DataChanged() {
     return;
 
   // If it already exists, move the corresponding item to the front.
-  if (hashItemMap.contains(hashValue)) {
+  bool isExistingItem = hashItemMap.contains(hashValue);
+  if (isExistingItem) {
     MoveItemToTop(hashValue);
-    return;
   }
-
-  AddItem(sourceInfo, hashValue);
+  else {
+    AddItem(sourceInfo, hashValue);
+  }
 
   if (ignoreNetDataChange) {
     ignoreNetDataChange = false;

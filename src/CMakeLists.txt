@@ -17,7 +17,7 @@ set(SRC_FILES
         Clipboard.cpp Clipboard.h
         Item.cpp Item.h Item.ui
         AboutDialog.cpp AboutDialog.h AboutDialog.ui
-        MainWindow.cpp MainWindow.h MainWindow.ui
+        SettingDialog.cpp SettingDialog.h SettingDialog.ui
         CustomToolTip.cpp CustomToolTip.h CustomToolTip.ui
 )
 set(RES_FILES Clipboard.qrc)

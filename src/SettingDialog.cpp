@@ -2,8 +2,8 @@
 // Created by LMR on 25-7-26.
 //
 
-#include "MainWindow.h"
-#include "ui_MainWindow.h"
+#include "SettingDialog.h"
+#include "ui_SettingDialog.h"
 
 #include <QButtonGroup>
 #include <QDesktopServices>
@@ -16,22 +16,22 @@
 #include "utils/Config.h"
 #include "utils/Logger.hpp"
 
-MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow), buttonGroup(new QButtonGroup(this)) {
+SettingDialog::SettingDialog(QWidget* parent) : QWidget(parent), ui(new Ui::SettingDialog), buttonGroup(new QButtonGroup(this)) {
   ui->setupUi(this);
   ui->stackedWidget->setCurrentIndex(0);
 
   buttonGroup->setExclusive(true);
-  buttonGroup->addButton(ui->generalButton, 0);
-  buttonGroup->addButton(ui->shortcutButton, 1);
-  buttonGroup->addButton(ui->syncButton, 2);
+  buttonGroup->addButton(ui->generalToolButton, 0);
+  buttonGroup->addButton(ui->shortcutToolButton, 1);
+  buttonGroup->addButton(ui->syncToolButton, 2);
 
 #ifndef ENABLE_SYNC
   ui->syncButton->hide();
 #endif
 
   // default is ui->generalButton
-  ui->generalButton->setIcon(QIcon(":/resources/images/home-white.svg"));
-  ui->generalButton->setChecked(true);
+  ui->generalToolButton->setIcon(QIcon(":/resources/images/home-white.svg"));
+  ui->generalToolButton->setChecked(true);
 
   const QString version = qApp->applicationVersion();
   const QString md{QString("### 简介\n"
@@ -52,7 +52,8 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow
   ui->warningLabel->setAlignment(Qt::AlignHCenter);
   ui->tipsLabel->setAlignment(Qt::AlignHCenter);
 
-  connect(ui->generalButton, &QToolButton::toggled, this, [this, button = ui->generalButton](bool checked) {
+  connect(ui->generalToolButton, &QToolButton::toggled, this, [this](bool checked) {
+    auto* button = ui->generalToolButton;
     if (checked) {
       button->setIcon(QIcon(":/resources/images/home-white.svg"));
     }
@@ -60,7 +61,8 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow
       button->setIcon(QIcon(":/resources/images/home.svg"));
     }
   });
-  connect(ui->shortcutButton, &QToolButton::toggled, this, [this, button = ui->shortcutButton](bool checked) {
+  connect(ui->shortcutToolButton, &QToolButton::toggled, this, [this](bool checked) {
+    auto* button = ui->shortcutToolButton;
     if (checked) {
       button->setIcon(QIcon(":/resources/images/keyboard-white.svg"));
     }
@@ -68,7 +70,8 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow
       button->setIcon(QIcon(":/resources/images/keyboard.svg"));
     }
   });
-  connect(ui->syncButton, &QToolButton::toggled, this, [this, button = ui->syncButton](bool checked) {
+  connect(ui->syncToolButton, &QToolButton::toggled, this, [this](bool checked) {
+    auto* button = ui->syncToolButton;
     if (checked) {
       button->setIcon(QIcon(":/resources/images/sync-white.svg"));
     }
@@ -153,9 +156,9 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow
   });
 }
 
-MainWindow::~MainWindow() { delete ui; }
+SettingDialog::~SettingDialog() { delete ui; }
 
-void MainWindow::SetHotkey(QHotkey* hotkey) {
+void SettingDialog::SetHotkey(QHotkey* hotkey) {
   this->hotkey = hotkey;
 
   ui->keySequenceEdit->setKeySequence(this->hotkey->shortcut());
@@ -184,9 +187,8 @@ void MainWindow::SetHotkey(QHotkey* hotkey) {
   });
 }
 
-void MainWindow::SetOnlineStatus(bool online) {
-  QString statusText = online ? "<span style='color:green;'>在线</span>"
-                                           : "<span style='color:red;'>离线</span>";
+void SettingDialog::SetOnlineStatus(bool online) {
+  QString statusText = online ? "<span style='color:green;'>在线</span>" : "<span style='color:red;'>离线</span>";
   auto userInfo = Config::instance().getUserInfo();
   if (userInfo.has_value()) {
     QString user = QString::fromStdString(userInfo.value().email);
@@ -212,9 +214,9 @@ void MainWindow::SetOnlineStatus(bool online) {
   }
 }
 
-void MainWindow::showEvent(QShowEvent* event) { QWidget::showEvent(event); }
+void SettingDialog::showEvent(QShowEvent* event) { QWidget::showEvent(event); }
 
-void MainWindow::closeEvent(QCloseEvent* event) {
+void SettingDialog::closeEvent(QCloseEvent* event) {
   hide();
   QWidget::closeEvent(event);
 }

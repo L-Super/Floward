@@ -5,7 +5,7 @@
 #include "Clipboard.h"
 #include "AboutDialog.h"
 #include "Item.h"
-#include "MainWindow.h"
+#include "SettingDialog.h"
 #include "QHotkey"
 
 #ifdef ENABLE_SYNC
@@ -41,7 +41,7 @@
 
 Clipboard::Clipboard(QWidget* parent)
     : QWidget(parent), clipboard(QApplication::clipboard()), trayIcon(new QSystemTrayIcon(this)), trayMenu(new QMenu()),
-      hotkey(new QHotkey(this)), listWidget(new QListWidget(this)), homeWidget(new MainWindow()) {
+      hotkey(new QHotkey(this)), listWidget(new QListWidget(this)), homeWidget(new SettingDialog()) {
   setWindowOpacity(0.9);
 
   setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint |

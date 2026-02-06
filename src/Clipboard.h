@@ -16,7 +16,7 @@ class QHotkey;
 class QClipboard;
 class QListWidget;
 class QListWidgetItem;
-class MainWindow;
+class SettingDialog;
 #ifdef ENABLE_SYNC
 class SyncServer;
 #endif
@@ -66,7 +66,7 @@ private:
   QHotkey* hotkey;
   QListWidget* listWidget;
   QHash<QByteArray, QListWidgetItem*> hashItemMap;
-  MainWindow* homeWidget;
+  SettingDialog* homeWidget;
   QString configFilePath;
   bool ignoreNextDataChange{false};
   bool ignoreNetDataChange{false};

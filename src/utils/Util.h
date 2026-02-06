@@ -9,6 +9,10 @@
 
 #include <optional>
 
+namespace about {
+const QString& IntroductionText();
+}
+
 namespace utils {
 QString generateDeviceId();
 

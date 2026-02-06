@@ -156,13 +156,12 @@ void Clipboard::DataChanged() {
     return;
 
   // If it already exists, move the corresponding item to the front.
-  bool isExistingItem = hashItemMap.contains(hashValue);
-  if (isExistingItem) {
+  if (hashItemMap.contains(hashValue)) {
     MoveItemToTop(hashValue);
+    return;
   }
-  else {
-    AddItem(sourceInfo, hashValue);
-  }
+
+  AddItem(sourceInfo, hashValue);
 
   if (ignoreNetDataChange) {
     ignoreNetDataChange = false;

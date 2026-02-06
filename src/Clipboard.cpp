@@ -177,13 +177,12 @@ void Clipboard::DataChanged() {
 void Clipboard::ClearItems() {
   listWidget->clear();
   clipboard->clear();
-  hashItems.clear();
 }
 
 void Clipboard::RemoveItem(QListWidgetItem* item) {
   Item* widget = qobject_cast<Item*>(listWidget->itemWidget(item));
   auto value = widget->GetHashValue();
-  hashItems.remove(value);
+
   hashItemMap.remove(value);
 
   listWidget->removeItemWidget(item);
@@ -447,7 +446,6 @@ void Clipboard::AddItem(const ClipboardSourceInfo& data, const QByteArray& hash)
   listWidget->setItemWidget(listItem, item);
 
   // 记录 hash 与 listItem 的映射
-  hashItems.insert(hash);
   hashItemMap.insert(hash, listItem);
 }
 

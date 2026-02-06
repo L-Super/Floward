@@ -65,7 +65,6 @@ private:
   QMenu* trayMenu;
   QHotkey* hotkey;
   QListWidget* listWidget;
-  QSet<QByteArray> hashItems;
   QHash<QByteArray, QListWidgetItem*> hashItemMap;
   MainWindow* homeWidget;
   QString configFilePath;

@@ -11,26 +11,43 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QPalette>
 #include <QStandardPaths>
+#include <QStyle>
 #include <QStyleHints>
 #include <QUrl>
 
+void SetAppColorScheme(bool isDark) {
+  QPalette palette = qApp->palette();
+
+  if (isDark) {
+    palette.setColor(QPalette::Window, QColor("#1f2329"));
+  }
+  else {
+    palette.setColor(QPalette::Window, QColor("#f2f4f6"));
+  }
+
+  qApp->setPalette(palette);
+}
+
 void ApplyTheme(Qt::ColorScheme scheme) {
   switch (scheme) {
-    case Qt::ColorScheme::Dark:
+    case Qt::ColorScheme::Dark: {
+      SetAppColorScheme(true);
       utils::LoadStyleSheet(":/qss/resources/style_dark.css");
-      break;
+    } break;
     case Qt::ColorScheme::Light:
+    case Qt::ColorScheme::Unknown: {
+      SetAppColorScheme(false);
       utils::LoadStyleSheet(":/qss/resources/style.css");
-    case Qt::ColorScheme::Unknown:
-      utils::LoadStyleSheet(":/qss/resources/style.css");
-      break;
+    } break;
   }
   qDebug() << "ApplyTheme to" << scheme;
 }
 
 int main(int argc, char* argv[]) {
   SingleApplication a(argc, argv, true);
+
   auto logFilePath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/logs/app.log";
   initLogging(logFilePath.toStdString());
 

@@ -199,11 +199,7 @@ void SettingDialog::OnThemeChanged(Qt::ColorScheme scheme) {
       ui->shortcutToolButton->setIcon(QIcon(":/resources/images/keyboard-white.svg"));
       ui->syncToolButton->setIcon(QIcon(":/resources/images/sync-white.svg"));
     } break;
-    case Qt::ColorScheme::Light: {
-      ui->generalToolButton->setIcon(QIcon(":/resources/images/home-white.svg"));
-      ui->shortcutToolButton->setIcon(QIcon(":/resources/images/keyboard.svg"));
-      ui->syncToolButton->setIcon(QIcon(":/resources/images/sync.svg"));
-    }
+    case Qt::ColorScheme::Light:
     case Qt::ColorScheme::Unknown: {
       ui->generalToolButton->setIcon(QIcon(":/resources/images/home.svg"));
       ui->shortcutToolButton->setIcon(QIcon(":/resources/images/keyboard.svg"));

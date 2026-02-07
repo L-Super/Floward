@@ -36,6 +36,14 @@ const QString& IntroductionText() {
 } // namespace about
 
 namespace utils {
+void LoadStyleSheet(const QString& stylePath) {
+  QFile style(stylePath);
+  if (style.open(QFile::ReadOnly)) {
+    qApp->setStyleSheet(style.readAll());
+  }
+  style.close();
+}
+
 QString generateDeviceId() {
   QString result = macAddress();
   // on Linux systems, this ID is usually permanent

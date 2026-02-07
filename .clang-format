@@ -21,3 +21,4 @@ BraceWrapping:
   SplitEmptyRecord: true
 PointerAlignment: Left
 ReferenceAlignment: Left
+IndentCaseLabels: true

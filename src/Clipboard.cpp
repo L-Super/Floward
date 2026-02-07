@@ -5,8 +5,8 @@
 #include "Clipboard.h"
 #include "AboutDialog.h"
 #include "Item.h"
-#include "SettingDialog.h"
 #include "QHotkey"
+#include "SettingDialog.h"
 
 #ifdef ENABLE_SYNC
 #include "net/SyncServer.h"
@@ -111,7 +111,7 @@ void Clipboard::DataChanged() {
   qDebug() << "mime data type:" << mimeData->formats();
 
   sourceInfo.timestamp = QDateTime::currentDateTime();
-  
+
   if (ignoreNetDataChange) {
     // data from server sync
     sourceInfo.processPath = {};
@@ -369,7 +369,8 @@ bool Clipboard::InitSyncServer() {
       if (sync) {
         if (sync->isOnline()) {
           trayIcon->setIcon(QIcon(":/resources/images/tray-online.svg"));
-        } else {
+        }
+        else {
           trayIcon->setIcon(QIcon(":/resources/images/tray-offline.svg"));
         }
       }
@@ -396,13 +397,13 @@ bool Clipboard::InitSyncServer() {
 
 void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
   switch (reason) {
-  case QSystemTrayIcon::Trigger:
-  case QSystemTrayIcon::DoubleClick: {
-    this->showNormal();
-  } break;
+    case QSystemTrayIcon::Trigger:
+    case QSystemTrayIcon::DoubleClick: {
+      this->showNormal();
+    } break;
 
-  default:
-    break;
+    default:
+      break;
   }
 }
 
@@ -413,14 +414,14 @@ void Clipboard::OnItemClicked(QListWidgetItem* listWidgetItem) {
   ignoreNextDataChange = true;
 
   switch (item->GetMetaType()) {
-  case QMetaType::QString: {
-    clipboard->setText(item->GetText());
-  } break;
-  case QMetaType::QImage: {
-    clipboard->setImage(item->GetImage());
-  } break;
-  default:
-    break;
+    case QMetaType::QString: {
+      clipboard->setText(item->GetText());
+    } break;
+    case QMetaType::QImage: {
+      clipboard->setImage(item->GetImage());
+    } break;
+    default:
+      break;
   }
 
   // 先移动item到顶部，这会自动设置当前行和滚动位置

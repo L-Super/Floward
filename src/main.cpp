@@ -6,33 +6,25 @@
 #endif
 #include "utils/Config.h"
 #include "utils/Logger.hpp"
+#include "utils/Util.h"
 #include "version.h"
 
 #include <QApplication>
 #include <QDebug>
-#include <QFile>
 #include <QStandardPaths>
 #include <QStyleHints>
 #include <QUrl>
 
-void LoadStyleSheet(const QString& stylePath) {
-  QFile style(stylePath);
-  if (style.open(QFile::ReadOnly)) {
-    qApp->setStyleSheet(style.readAll());
-  }
-  style.close();
-}
-
 void ApplyTheme(Qt::ColorScheme scheme) {
   switch (scheme) {
-  case Qt::ColorScheme::Dark:
-    LoadStyleSheet(":/qss/resources/style_dark.css");
-    break;
-  case Qt::ColorScheme::Light:
-    LoadStyleSheet(":/qss/resources/style.css");
-  case Qt::ColorScheme::Unknown:
-    LoadStyleSheet(":/qss/resources/style.css");
-    break;
+    case Qt::ColorScheme::Dark:
+      utils::LoadStyleSheet(":/qss/resources/style_dark.css");
+      break;
+    case Qt::ColorScheme::Light:
+      utils::LoadStyleSheet(":/qss/resources/style.css");
+    case Qt::ColorScheme::Unknown:
+      utils::LoadStyleSheet(":/qss/resources/style.css");
+      break;
   }
   qDebug() << "ApplyTheme to" << scheme;
 }

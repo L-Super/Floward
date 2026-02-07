@@ -14,6 +14,8 @@ const QString& IntroductionText();
 }
 
 namespace utils {
+void LoadStyleSheet(const QString& stylePath);
+
 QString generateDeviceId();
 
 QString macAddress();

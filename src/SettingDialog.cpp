@@ -7,6 +7,8 @@
 
 #include <QButtonGroup>
 #include <QDesktopServices>
+#include <QStyle>
+#include <QStyleHints>
 #include <QTimer>
 
 #include "QHotkey"
@@ -21,8 +23,6 @@ SettingDialog::SettingDialog(QWidget* parent)
     : QWidget(parent), ui(new Ui::SettingDialog), buttonGroup(new QButtonGroup(this)) {
   ui->setupUi(this);
 
-  setFixedSize(520, 321);
-
   ui->stackedWidget->setCurrentIndex(0);
 
   buttonGroup->setExclusive(true);
@@ -31,11 +31,10 @@ SettingDialog::SettingDialog(QWidget* parent)
   buttonGroup->addButton(ui->syncToolButton, 2);
 
 #ifndef ENABLE_SYNC
-  ui->syncButton->hide();
+  ui->syncToolButton->hide();
 #endif
 
-  // default is ui->generalButton
-  ui->generalToolButton->setIcon(QIcon(":/resources/images/home-white.svg"));
+  // default is ui->generalToolButton
   ui->generalToolButton->setChecked(true);
 
   ui->textBrowser->setMarkdown(about::IntroductionText());
@@ -47,33 +46,8 @@ SettingDialog::SettingDialog(QWidget* parent)
   ui->warningLabel->setAlignment(Qt::AlignHCenter);
   ui->tipsLabel->setAlignment(Qt::AlignHCenter);
 
-  connect(ui->generalToolButton, &QToolButton::toggled, this, [this](bool checked) {
-    auto* button = ui->generalToolButton;
-    if (checked) {
-      button->setIcon(QIcon(":/resources/images/home-white.svg"));
-    }
-    else {
-      button->setIcon(QIcon(":/resources/images/home.svg"));
-    }
-  });
-  connect(ui->shortcutToolButton, &QToolButton::toggled, this, [this](bool checked) {
-    auto* button = ui->shortcutToolButton;
-    if (checked) {
-      button->setIcon(QIcon(":/resources/images/keyboard-white.svg"));
-    }
-    else {
-      button->setIcon(QIcon(":/resources/images/keyboard.svg"));
-    }
-  });
-  connect(ui->syncToolButton, &QToolButton::toggled, this, [this](bool checked) {
-    auto* button = ui->syncToolButton;
-    if (checked) {
-      button->setIcon(QIcon(":/resources/images/sync-white.svg"));
-    }
-    else {
-      button->setIcon(QIcon(":/resources/images/sync.svg"));
-    }
-  });
+  OnThemeChanged(QGuiApplication::styleHints()->colorScheme());
+  connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, &SettingDialog::OnThemeChanged);
 
   connect(buttonGroup, &QButtonGroup::idClicked, this, [this](auto id) { ui->stackedWidget->setCurrentIndex(id); });
 
@@ -81,56 +55,7 @@ SettingDialog::SettingDialog(QWidget* parent)
     AutoStartup autoStartup;
     autoStartup.SetAutoStartup(checked);
   });
-  connect(ui->confirmButton, &QPushButton::clicked, this, [this]() {
-    bool changed{false};
-
-    QString deviceName = ui->deviceNameLineEdit->text();
-    if (deviceName.isEmpty()) {
-      deviceName = ui->deviceNameLineEdit->placeholderText();
-    }
-
-    if (deviceName.isEmpty()) {
-      ui->tipsLabel->setText("<span style='color:red;'>设备名为空</span>");
-      return;
-    }
-
-    if (options.deviceName != deviceName) {
-      ui->deviceNameLineEdit->clear();
-      ui->deviceNameLineEdit->setPlaceholderText(deviceName);
-      options.deviceName = deviceName;
-      changed = true;
-
-      auto info = Config::instance().getServerConfig();
-      if (info.has_value()) {
-        info->device_name = deviceName.toStdString();
-        Config::instance().setServerConfig(*info);
-      }
-    }
-
-    QString url = ui->urlLineEdit->text();
-    if (url.isEmpty()) {
-      url = ui->urlLineEdit->placeholderText();
-    }
-
-    if (url.isEmpty()) {
-      ui->tipsLabel->setText("<span style='color:red;'>服务器 URL 为空</span>");
-      return;
-    }
-
-    if (options.url != url) {
-      ui->urlLineEdit->clear();
-      ui->urlLineEdit->setPlaceholderText(url);
-      options.url = url;
-      changed = true;
-
-      Config::instance().set("url", url.toStdString());
-    }
-
-    if (changed) {
-      ui->tipsLabel->setText("<span style='color:green;'>保存成功！</span>");
-      QTimer::singleShot(2000, [this]() { ui->tipsLabel->clear(); });
-    }
-  });
+  connect(ui->confirmButton, &QPushButton::clicked, this, &SettingDialog::OnSyncPageChanged);
   // connect(ui->keySequenceEdit, &QKeySequenceEdit::editingFinished, this,
   //         [this, hotkey]() { qDebug() << "editing finished"; });
   // connect(ui->keySequenceEdit, &QKeySequenceEdit::keySequenceChanged, this,
@@ -214,4 +139,76 @@ void SettingDialog::showEvent(QShowEvent* event) { QWidget::showEvent(event); }
 void SettingDialog::closeEvent(QCloseEvent* event) {
   hide();
   QWidget::closeEvent(event);
+}
+
+void SettingDialog::OnSyncPageChanged() {
+  bool changed{false};
+
+  QString deviceName = ui->deviceNameLineEdit->text();
+  if (deviceName.isEmpty()) {
+    deviceName = ui->deviceNameLineEdit->placeholderText();
+  }
+
+  if (deviceName.isEmpty()) {
+    ui->tipsLabel->setText("<span style='color:red;'>设备名为空</span>");
+    return;
+  }
+
+  if (options.deviceName != deviceName) {
+    ui->deviceNameLineEdit->clear();
+    ui->deviceNameLineEdit->setPlaceholderText(deviceName);
+    options.deviceName = deviceName;
+    changed = true;
+
+    auto info = Config::instance().getServerConfig();
+    if (info.has_value()) {
+      info->device_name = deviceName.toStdString();
+      Config::instance().setServerConfig(*info);
+    }
+  }
+
+  QString url = ui->urlLineEdit->text();
+  if (url.isEmpty()) {
+    url = ui->urlLineEdit->placeholderText();
+  }
+
+  if (url.isEmpty()) {
+    ui->tipsLabel->setText("<span style='color:red;'>服务器 URL 为空</span>");
+    return;
+  }
+
+  if (options.url != url) {
+    ui->urlLineEdit->clear();
+    ui->urlLineEdit->setPlaceholderText(url);
+    options.url = url;
+    changed = true;
+
+    Config::instance().set("url", url.toStdString());
+  }
+
+  if (changed) {
+    ui->tipsLabel->setText("<span style='color:green;'>保存成功！</span>");
+    QTimer::singleShot(2000, [this]() { ui->tipsLabel->clear(); });
+  }
+}
+
+void SettingDialog::OnThemeChanged(Qt::ColorScheme scheme) {
+  switch (scheme) {
+    case Qt::ColorScheme::Dark: {
+      ui->generalToolButton->setIcon(QIcon(":/resources/images/home-white.svg"));
+      ui->shortcutToolButton->setIcon(QIcon(":/resources/images/keyboard-white.svg"));
+      ui->syncToolButton->setIcon(QIcon(":/resources/images/sync-white.svg"));
+    } break;
+    case Qt::ColorScheme::Light: {
+      ui->generalToolButton->setIcon(QIcon(":/resources/images/home-white.svg"));
+      ui->shortcutToolButton->setIcon(QIcon(":/resources/images/keyboard.svg"));
+      ui->syncToolButton->setIcon(QIcon(":/resources/images/sync.svg"));
+    }
+    case Qt::ColorScheme::Unknown: {
+      ui->generalToolButton->setIcon(QIcon(":/resources/images/home.svg"));
+      ui->shortcutToolButton->setIcon(QIcon(":/resources/images/keyboard.svg"));
+      ui->syncToolButton->setIcon(QIcon(":/resources/images/sync.svg"));
+    } break;
+  }
+  qDebug() << "System theme change to" << scheme << "on SettingDialog";
 }

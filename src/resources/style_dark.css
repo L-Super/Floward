@@ -124,3 +124,51 @@ QPushButton#infoPushButton {
     border: none;
     outline: none;
 }
+
+QWidget#CustomToolTip {
+    background-color: #222222;
+}
+
+/*---- SettingDialog ----*/
+QToolButton {
+    background-color: #2d2d2d;
+    border: none;
+    color: #ffffff;
+    border-radius: 6px;
+}
+
+QToolButton:checked {
+    color: #ffffff;
+    background-color: #495057;
+}
+
+QToolButton:hover {
+    background-color: #3d3d3d;
+}
+
+QGroupBox {
+    color: #ffffff;
+    border: 1px solid #6c757d;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+QWidget#SettingDialog {
+    background-color: #1f2329;
+    border-radius: 10px;
+}
+
+QStackedWidget#stackedWidget {
+    background-color: #181b20;
+    border-radius: 10px;
+}
+
+QPushButton#confirmButton, QPushButton#keySequenceConfirmButton {
+    padding: 5px 20px;
+    font-size: 12px;
+}
+
+QPushButton#confirmButton {
+    font-size: 13px;
+}

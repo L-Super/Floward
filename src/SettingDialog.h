@@ -34,6 +34,9 @@ protected:
     QString deviceName;
   };
 
+  void OnSyncPageChanged();
+  void OnThemeChanged(Qt::ColorScheme scheme);
+
 private:
   Ui::SettingDialog* ui;
   QButtonGroup* buttonGroup{};

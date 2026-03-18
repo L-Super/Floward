@@ -3,4 +3,5 @@ target_sources(${PROJECT_NAME} PUBLIC
         AutoStartup.cpp AutoStartup.h
         Util.cpp Util.h
         Logger.hpp
+        Expected.hpp
 )

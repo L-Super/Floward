@@ -3,7 +3,13 @@ project(Floward
         VERSION 3.0.3.0 # Set application version. For more details, see src/version.h.in
 )
 
-set(CMAKE_CXX_STANDARD 23)
+# Adapt to the backward C++ standard support on Linux platforms.
+if (UNIX AND NOT APPLE)
+    set(CMAKE_CXX_STANDARD 20)
+else ()
+    set(CMAKE_CXX_STANDARD 23)
+endif ()
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)

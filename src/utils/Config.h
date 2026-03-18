@@ -4,7 +4,19 @@
 
 #pragma once
 
+#if __cplusplus >= 202300L && __has_include(<expected> )
+#define HAVE_STD_EXPECTED 1
+#else
+#define HAVE_STD_EXPECTED 0
+#endif
+
+#if HAVE_STD_EXPECTED
 #include <expected>
+using std::expected;
+using std::unexpected;
+#else
+#include "Expected.hpp"
+#endif
 #include <filesystem>
 #include <optional>
 
@@ -23,7 +35,7 @@ public:
     return config;
   }
 
-  std::expected<bool, std::string> load(const std::filesystem::path& file);
+  expected<bool, std::string> load(const std::filesystem::path& file);
   bool save() const;
 
   template<typename T>

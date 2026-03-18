@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 
 Config::~Config() { save(); }
 
-std::expected<bool, std::string> Config::load(const fs::path& file) {
+expected<bool, std::string> Config::load(const fs::path& file) {
   if (!fs::exists(file)) {
     auto parentPath = file.parent_path();
     if (!fs::exists(parentPath)) {
@@ -24,13 +24,13 @@ std::expected<bool, std::string> Config::load(const fs::path& file) {
   filepath_ = file;
   std::ifstream in(file);
   if (!in.is_open())
-    return std::unexpected("File not open");
+    return unexpected("File not open");
 
   // Check if file is empty
   in.seekg(0, std::ios::end);
   if (in.tellg() == 0) {
     // File is empty, do not parse
-    return std::unexpected("File is empty");
+    return unexpected("File is empty");
   }
   in.seekg(0, std::ios::beg);
 
@@ -39,7 +39,7 @@ std::expected<bool, std::string> Config::load(const fs::path& file) {
   }
   catch (const std::exception& e) {
     spdlog::error("Config json parse failed. {}", e.what());
-    return std::unexpected(e.what());
+    return unexpected(e.what());
   }
 
   return true;

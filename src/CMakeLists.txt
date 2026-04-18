@@ -94,6 +94,7 @@ set(QAPPLICATION_CLASS QApplication CACHE STRING "Inheritance class for SingleAp
 include(FetchContent)
 FetchContent_Declare(QHotkey
         GIT_REPOSITORY https://github.com/Skycoder42/QHotkey
+        GIT_TAG 4e3a244d87f1f7e741e1395f2ffe825f3a8ada45
 )
 FetchContent_Declare(SingleApplication
         URL https://github.com/itay-grudev/SingleApplication/archive/refs/tags/v3.5.4.tar.gz

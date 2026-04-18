@@ -46,6 +46,9 @@ SettingDialog::SettingDialog(QWidget* parent)
   ui->warningLabel->setAlignment(Qt::AlignHCenter);
   ui->tipsLabel->setAlignment(Qt::AlignHCenter);
 
+  ui->urlLineEdit->setClearButtonEnabled(true);
+  ui->deviceNameLineEdit->setClearButtonEnabled(true);
+
   OnThemeChanged(QGuiApplication::styleHints()->colorScheme());
   connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, &SettingDialog::OnThemeChanged);
 

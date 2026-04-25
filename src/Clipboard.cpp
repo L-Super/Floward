@@ -69,6 +69,15 @@ Clipboard::Clipboard(QWidget* parent)
   CreateTrayAction();
   InitTrayMenu();
 
+  // 初始化最大历史记录条数
+  if (auto v = Config::instance().get<int>("max_history"); v.has_value()) {
+    maxHistoryCount = v.value();
+  }
+  connect(homeWidget, &SettingDialog::maxHistoryChanged, this, [this](int count) {
+    maxHistoryCount = count;
+    RemoveOlderItems();
+  });
+
 #ifdef ENABLE_SYNC
   InitSyncServer();
 #endif
@@ -448,6 +457,19 @@ void Clipboard::AddItem(const ClipboardSourceInfo& data, const QByteArray& hash)
 
   // 记录 hash 与 listItem 的映射
   hashItemMap.insert(hash, listItem);
+
+  // 超出最大条数时，删除最旧的条目（列表末尾）
+  RemoveOlderItems();
+}
+
+void Clipboard::RemoveOlderItems() {
+  while (listWidget->count() > maxHistoryCount) {
+    // 末尾是最旧的条目
+    QListWidgetItem* oldest = listWidget->item(listWidget->count() - 1);
+    if (!oldest)
+      break;
+    RemoveItem(oldest);
+  }
 }
 
 void Clipboard::MoveItemToTop(const QByteArray& hashValue) {

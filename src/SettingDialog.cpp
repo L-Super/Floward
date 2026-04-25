@@ -43,6 +43,19 @@ SettingDialog::SettingDialog(QWidget* parent)
   AutoStartup autoStartup;
   ui->autoStartupCheckBox->setChecked(autoStartup.IsAutoStartup());
 
+  // 初始化最大历史记录条数
+  int maxHistory{};
+  if (auto v = Config::instance().get<int>("max_history"); v.has_value()) {
+    maxHistory = v.value_or(100);
+  }
+  ui->maxHistorySpinBox->setValue(maxHistory);
+
+  connect(ui->maxHistorySpinBox, &QSpinBox::valueChanged, this, [this](int value) {
+    Config::instance().set("max_history", value);
+    Config::instance().save();
+    emit maxHistoryChanged(value);
+  });
+
   ui->warningLabel->setAlignment(Qt::AlignHCenter);
   ui->tipsLabel->setAlignment(Qt::AlignHCenter);
 

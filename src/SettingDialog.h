@@ -24,6 +24,9 @@ public:
   void SetHotkey(QHotkey* hotkey);
   void SetOnlineStatus(bool online);
 
+signals:
+  void maxHistoryChanged(int maxCount);
+
 protected:
   void showEvent(QShowEvent* event) override;
   void closeEvent(QCloseEvent* event) override;

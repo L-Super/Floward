@@ -35,6 +35,7 @@ public:
 protected:
   void AddItem(const ClipboardSourceInfo& sourceInfo, const QByteArray& hash);
   void MoveItemToTop(const QByteArray& hashValue);
+  void RemoveOlderItems();
   QPoint adjustPosition(const QRect& rect);
   void pasteText();
 
@@ -68,6 +69,7 @@ private:
   QHash<QByteArray, QListWidgetItem*> hashItemMap;
   SettingDialog* homeWidget;
   QString configFilePath;
+  int maxHistoryCount{100};
   bool ignoreNextDataChange{false};
   bool ignoreNetDataChange{false};
 #ifdef ENABLE_SYNC

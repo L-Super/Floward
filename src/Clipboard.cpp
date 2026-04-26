@@ -226,7 +226,7 @@ void Clipboard::RemoveItem(QListWidgetItem* item) {
 }
 
 void Clipboard::StayOnTop() {
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
   auto caretRect = utils::GetFocusCaretPosition();
   if (caretRect.has_value()) {
     QPoint targetPos = adjustPosition(caretRect.value());

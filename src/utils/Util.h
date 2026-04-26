@@ -26,10 +26,12 @@ QIcon GetAppIcon(const QString& appPath);
 
 QString GetClipboardSourceAppPath();
 
+#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
+std::optional<QRect> GetFocusCaretPosition();
+#endif
+
 #ifdef Q_OS_WIN
 QString GetProcessPath(HWND hwnd);
-
-std::optional<QRect> GetFocusCaretPosition();
 #endif
 
 #ifdef Q_OS_MAC

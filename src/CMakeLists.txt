@@ -136,7 +136,10 @@ if (ENABLE_SYNC_FEATURE)
 endif ()
 
 if (APPLE)
-    target_link_libraries(${PROJECT_NAME} "-framework AppKit")
+    target_link_libraries(${PROJECT_NAME}
+            "-framework AppKit"
+            "-framework ApplicationServices"
+    )
 endif ()
 
 # Deploy the Qt Application

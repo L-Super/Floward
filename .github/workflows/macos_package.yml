@@ -1,0 +1,114 @@
+name: macos-package
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  standalone-build:
+    name: Build Standalone Version
+    runs-on: macos-latest
+    env:
+      QT_VERSION: 6.8.0
+      BUILD_TYPE: Release
+      BUILD_VARIANT: standalone
+
+    steps:
+      - name: Checkout Source code
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          cache: true
+          cache-key-prefix: 'Qt'
+
+      - name: Configure CMake for Standalone
+        run: |
+          cmake -B ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DENABLE_SYNC_FEATURE=OFF
+
+      - name: Build Standalone
+        run: |
+          cmake --build ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} --config ${{ env.BUILD_TYPE }}
+
+      - name: Create DMG for Standalone
+        uses: L-Super/create-dmg-actions@v1
+        with:
+          dmg_name: 'Floward_Standalone'
+          src_dir: '${{ github.workspace }}/build-${{ env.BUILD_VARIANT }}/src/Floward.app'
+
+      - name: Upload Standalone Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Floward-macOS-Standalone
+          path: ${{ github.workspace }}/Floward_Standalone*.dmg
+          retention-days: 7
+
+  sync-build:
+    name: Build Sync Version
+    runs-on: macos-latest
+    env:
+      QT_VERSION: 6.8.0
+      BUILD_TYPE: Release
+      BUILD_VARIANT: sync
+
+    steps:
+      - name: Checkout Source code
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          cache: true
+          cache-key-prefix: 'Qt'
+          modules: 'qtwebsockets'
+
+      - name: Configure CMake for Sync
+        run: |
+          cmake -B ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DENABLE_SYNC_FEATURE=ON
+
+      - name: Build Sync
+        run: |
+          cmake --build ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} --config ${{ env.BUILD_TYPE }}
+
+      - name: Create DMG for Sync
+        uses: L-Super/create-dmg-actions@v1
+        with:
+          dmg_name: 'Floward_Sync'
+          src_dir: '${{ github.workspace }}/build-${{ env.BUILD_VARIANT }}/src/Floward.app'
+
+      - name: Upload Sync Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Floward-macOS-Sync
+          path: ${{ github.workspace }}/Floward_Sync*.dmg
+          retention-days: 7
+
+  create-release:
+    name: Create Release
+    needs: [standalone-build, sync-build]
+    runs-on: macos-latest
+    if: github.ref_type == 'tag'
+
+    steps:
+      - name: Download Standalone Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Floward-macOS-Standalone
+          path: artifacts/standalone
+
+      - name: Download Sync Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Floward-macOS-Sync
+          path: artifacts/sync
+
+      - name: Create Release and Upload All Artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/standalone/*.dmg
+            artifacts/sync/*.dmg

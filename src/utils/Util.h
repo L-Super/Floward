@@ -31,4 +31,10 @@ QString GetProcessPath(HWND hwnd);
 
 std::optional<QRect> GetFocusCaretPosition();
 #endif
+
+#ifdef Q_OS_MAC
+QString GetFrontmostAppPath();
+
+QIcon GetAppIconFromBundle(const QString& appPath);
+#endif
 } // namespace utils

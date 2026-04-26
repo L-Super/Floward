@@ -70,6 +70,8 @@ QString GetClipboardSourceAppPath() {
   }
 
   return GetProcessPath(clipboardOwner);
+#elif defined(Q_OS_MAC)
+  return GetFrontmostAppPath();
 #else
   return {};
 #endif
@@ -193,7 +195,12 @@ std::optional<QRect> GetFocusCaretPosition() {
 
 QString GetAppName(const QString& appPath) {
   QFileInfo info(appPath);
+#ifdef Q_OS_MAC
+  // macOS: strip ".app" suffix, e.g. "Safari.app" -> "Safari"
+  return info.baseName();
+#else
   return info.fileName();
+#endif
 }
 
 QIcon GetAppIcon(const QString& appPath) {

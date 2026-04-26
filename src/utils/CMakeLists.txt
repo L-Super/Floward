@@ -10,5 +10,6 @@ if (APPLE)
     target_sources(${PROJECT_NAME} PRIVATE
             ClipboardPollHelper.h
             ClipboardPollHelper.mm
+            UtilMac.mm
     )
 endif ()

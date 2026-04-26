@@ -135,6 +135,10 @@ if (ENABLE_SYNC_FEATURE)
     )
 endif ()
 
+if (APPLE)
+    target_link_libraries(${PROJECT_NAME} "-framework AppKit")
+endif ()
+
 # Deploy the Qt Application
 if (WIN32)
     add_custom_command(TARGET ${PROJECT_NAME}

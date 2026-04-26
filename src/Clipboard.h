@@ -6,7 +6,6 @@
 
 #include "Item.h"
 
-#include <QSet>
 #include <QSystemTrayIcon>
 #include <QWidget>
 #include <memory>
@@ -17,6 +16,7 @@ class QClipboard;
 class QListWidget;
 class QListWidgetItem;
 class SettingDialog;
+class QTimer;
 #ifdef ENABLE_SYNC
 class SyncServer;
 #endif
@@ -72,6 +72,10 @@ private:
   int maxHistoryCount{100};
   bool ignoreNextDataChange{false};
   bool ignoreNetDataChange{false};
+#ifdef Q_OS_MAC
+  QTimer* clipboardPollTimer{};
+  int lastChangeCount{};
+#endif
 #ifdef ENABLE_SYNC
   std::unique_ptr<SyncServer> sync;
 #endif

@@ -39,6 +39,10 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
+#ifdef Q_OS_MAC
+#include "utils/ClipboardPollHelper.h"
+#endif
+
 Clipboard::Clipboard(QWidget* parent)
     : QWidget(parent), clipboard(QApplication::clipboard()), trayIcon(new QSystemTrayIcon(this)), trayMenu(new QMenu()),
       hotkey(new QHotkey(this)), listWidget(new QListWidget(this)), homeWidget(new SettingDialog()) {
@@ -93,6 +97,22 @@ Clipboard::Clipboard(QWidget* parent)
   connect(clipboard, &QClipboard::dataChanged, this, &Clipboard::DataChanged);
   connect(listWidget, &QListWidget::itemClicked, this, &Clipboard::OnItemClicked);
   connect(clearButton, &QPushButton::clicked, this, &Clipboard::ClearItems);
+
+#ifdef Q_OS_MAC
+  // macOS: QClipboard::dataChanged is unreliable when the app is in the background.
+  // Poll NSPasteboard.changeCount to detect clipboard changes reliably.
+  lastChangeCount = getClipboardChangeCount();
+  clipboardPollTimer = new QTimer(this);
+  clipboardPollTimer->setInterval(500);
+  connect(clipboardPollTimer, &QTimer::timeout, this, [this] {
+    int currentCount = getClipboardChangeCount();
+    if (currentCount != lastChangeCount) {
+      lastChangeCount = currentCount;
+      DataChanged();
+    }
+  });
+  clipboardPollTimer->start();
+#endif
 }
 
 Clipboard::~Clipboard() { homeWidget->deleteLater(); }

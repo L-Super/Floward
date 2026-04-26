@@ -5,3 +5,10 @@ target_sources(${PROJECT_NAME} PUBLIC
         Logger.hpp
         Expected.hpp
 )
+
+if (APPLE)
+    target_sources(${PROJECT_NAME} PRIVATE
+            ClipboardPollHelper.h
+            ClipboardPollHelper.mm
+    )
+endif ()

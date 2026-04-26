@@ -6,7 +6,6 @@
 
 #include <QWidget>
 class QButtonGroup;
-class QHotkey;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,9 +19,6 @@ class SettingDialog : public QWidget {
 public:
   explicit SettingDialog(QWidget* parent = nullptr);
   ~SettingDialog() override;
-
-  void SetHotkey(QHotkey* hotkey);
-  void SetOnlineStatus(bool online);
 
 protected:
   void showEvent(QShowEvent* event) override;
@@ -38,8 +34,9 @@ protected:
   void OnThemeChanged(Qt::ColorScheme scheme);
 
 private:
+  void SetOnlineStatus(bool online);
+
   Ui::SettingDialog* ui;
   QButtonGroup* buttonGroup{};
-  QHotkey* hotkey{};
   Options options;
 };

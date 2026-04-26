@@ -71,10 +71,35 @@ SettingDialog::SettingDialog(QWidget* parent)
     autoStartup.SetAutoStartup(checked);
   });
   connect(ui->confirmButton, &QPushButton::clicked, this, &SettingDialog::OnSyncPageChanged);
-  // connect(ui->keySequenceEdit, &QKeySequenceEdit::editingFinished, this,
-  //         [this, hotkey]() { qDebug() << "editing finished"; });
-  // connect(ui->keySequenceEdit, &QKeySequenceEdit::keySequenceChanged, this,
-  //         [this](const QKeySequence &keySequence) { qDebug() << "keySequenceChanged" << keySequence; });
+  // 初始化快捷键显示
+  QString shortcutStr = "Alt+V";
+  if (auto op = Config::instance().get<std::string>("shortcut"); op.has_value() && !op->empty()) {
+    shortcutStr = QString::fromStdString(*op);
+  }
+  ui->keySequenceEdit->setKeySequence(QKeySequence(shortcutStr));
+
+  connect(ui->keySequenceConfirmButton, &QPushButton::clicked, this, [this]() {
+    auto keySequence = ui->keySequenceEdit->keySequence();
+    auto currentShortcut = Config::instance().get<std::string>("shortcut");
+    if (currentShortcut.has_value() && QKeySequence(QString::fromStdString(*currentShortcut)) == keySequence) {
+      ui->warningLabel->setText("快捷键未改变");
+      ui->warningLabel->show();
+      QTimer::singleShot(2000, [this]() { ui->warningLabel->clear(); });
+      return;
+    }
+    QHotkey testHotkey(keySequence, true);
+    if (testHotkey.isRegistered()) {
+      ui->warningLabel->setText("快捷键设置成功！");
+      auto value = keySequence.toString().toStdString();
+      Config::instance().set("shortcut", value);
+      Config::instance().save();
+    }
+    else {
+      ui->warningLabel->setText("<span style='color:red;'>快捷键设置冲突或不符合规则，请重新设置！</span>");
+    }
+    ui->warningLabel->show();
+    QTimer::singleShot(2000, [this]() { ui->warningLabel->clear(); });
+  });
   connect(ui->loginButton, &QPushButton::clicked, this, [this]() {
     spdlog::info("Login button clicked");
     auto lineEditText = ui->urlLineEdit->text();
@@ -89,38 +114,16 @@ SettingDialog::SettingDialog(QWidget* parent)
       QTimer::singleShot(2000, [this]() { ui->tipsLabel->clear(); });
     }
   });
+
+#ifdef ENABLE_SYNC
+  Config::instance().addObserver("online_status", [this]() {
+    if (auto v = Config::instance().get<bool>("online_status"); v.has_value())
+      SetOnlineStatus(v.value());
+  });
+#endif
 }
 
 SettingDialog::~SettingDialog() { delete ui; }
-
-void SettingDialog::SetHotkey(QHotkey* hotkey) {
-  this->hotkey = hotkey;
-
-  ui->keySequenceEdit->setKeySequence(this->hotkey->shortcut());
-
-  connect(ui->keySequenceConfirmButton, &QPushButton::clicked, this, [this]() {
-    if (!this->hotkey)
-      return;
-
-    auto keySequence = ui->keySequenceEdit->keySequence();
-    this->hotkey->setShortcut(keySequence, true);
-
-    if (this->hotkey->isRegistered()) {
-      ui->warningLabel->setText("快捷键设置成功！");
-
-      // update config
-      auto value = keySequence.toString().toStdString();
-      Config::instance().set("shortcut", value);
-      Config::instance().save();
-    }
-    else {
-      ui->warningLabel->setText("<span style='color:red;'>快捷键设置冲突或不符合规则，请重新设置！</span>");
-    }
-
-    ui->warningLabel->show();
-    QTimer::singleShot(2000, [this]() { ui->warningLabel->clear(); });
-  });
-}
 
 void SettingDialog::SetOnlineStatus(bool online) {
   QString statusText = online ? "<span style='color:green;'>在线</span>" : "<span style='color:red;'>离线</span>";
@@ -149,7 +152,13 @@ void SettingDialog::SetOnlineStatus(bool online) {
   }
 }
 
-void SettingDialog::showEvent(QShowEvent* event) { QWidget::showEvent(event); }
+void SettingDialog::showEvent(QShowEvent* event) {
+#ifdef ENABLE_SYNC
+  if (auto v = Config::instance().get<bool>("online_status"); v.has_value())
+    SetOnlineStatus(v.value());
+#endif
+  QWidget::showEvent(event);
+}
 
 void SettingDialog::closeEvent(QCloseEvent* event) {
   hide();

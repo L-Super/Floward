@@ -65,10 +65,14 @@ Clipboard::Clipboard(QWidget* parent)
   listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
   InitShortcut();
-  homeWidget->SetHotkey(hotkey);
   CreateTrayAction();
   InitTrayMenu();
 
+  Config::instance().addObserver("shortcut", [this]() {
+    if (auto op = Config::instance().get<std::string>("shortcut"); op.has_value() && !op->empty()) {
+      hotkey->setShortcut(QKeySequence(QString::fromStdString(*op)), true);
+    }
+  });
   // 初始化最大历史记录条数
   if (auto v = Config::instance().get<int>("max_history"); v.has_value()) {
     maxHistoryCount = v.value();
@@ -244,15 +248,6 @@ void Clipboard::CreateTrayAction() {
   trayMenu->addAction(exitAction);
 
   connect(homeAction, &QAction::triggered, this, [this] {
-#ifdef ENABLE_SYNC
-    if (sync) {
-      homeWidget->SetOnlineStatus(sync->isOnline());
-    }
-    else {
-      homeWidget->SetOnlineStatus(false);
-    }
-#endif
-
     homeWidget->show();
     homeWidget->raise();
   });
@@ -303,7 +298,7 @@ bool Clipboard::InitSyncServer() {
     connect(sync.get(), &SyncServer::registrationFinished, [] {});
     connect(sync.get(), &SyncServer::loginFinished, [this](bool success, const Token& token, const QString& message) {
       if (success) {
-        homeWidget->SetOnlineStatus(true);
+        Config::instance().set("online_status", true);
         qDebug() << "login successful";
       }
       else
@@ -378,7 +373,9 @@ bool Clipboard::InitSyncServer() {
     });
     connect(sync.get(), &SyncServer::syncConnected, [this] {
       if (sync) {
-        if (sync->isOnline()) {
+        bool online = sync->isOnline();
+        Config::instance().set("online_status", online);
+        if (online) {
           trayIcon->setIcon(QIcon(":/resources/images/tray-online.svg"));
         }
         else {
@@ -388,6 +385,7 @@ bool Clipboard::InitSyncServer() {
       qDebug() << "syncConnected";
     });
     connect(sync.get(), &SyncServer::syncDisconnected, [this] {
+      Config::instance().set("online_status", false);
       trayIcon->setIcon(QIcon(":/resources/images/tray-offline.svg"));
       qDebug() << "syncDisconnected";
     });

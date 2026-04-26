@@ -20,7 +20,10 @@ using tl::expected;
 using tl::unexpected;
 #endif
 #include <filesystem>
+#include <functional>
+#include <map>
 #include <optional>
+#include <vector>
 
 #include "nlohmann/json.hpp"
 
@@ -32,6 +35,9 @@ private:
   ~Config();
 
 public:
+  using PrefCallback = std::function<void()>;
+  using CallbackId = uint64_t;
+
   static Config& instance() {
     static Config config;
     return config;
@@ -42,8 +48,11 @@ public:
 
   template<typename T>
   void set(const std::string& key, T&& value) {
-    // set data to json first
+    auto old = data_.contains(key) ? data_[key] : nlohmann::json{};
     data_[key] = std::forward<T>(value);
+    if (data_[key] != old) {
+      notify(key);
+    }
   }
 
   template<typename T>
@@ -53,6 +62,9 @@ public:
     return data_.at(key).get<T>();
   }
 
+  CallbackId addObserver(const std::string& key, PrefCallback callback);
+  void removeObserver(const std::string& key, CallbackId id);
+
   void setServerConfig(const ServerConfig& server);
   std::optional<ServerConfig> getServerConfig() const;
 
@@ -60,6 +72,15 @@ public:
   std::optional<UserInfo> getUserInfo() const;
 
 private:
+  void notify(const std::string& key);
+
+  struct ObserverEntry {
+    CallbackId id;
+    PrefCallback callback;
+  };
+
   nlohmann::json data_;
   std::filesystem::path filepath_{};
+  std::map<std::string, std::vector<ObserverEntry>> observers_{};
+  CallbackId nextId_ = 1;
 };

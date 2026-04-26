@@ -73,9 +73,11 @@ Clipboard::Clipboard(QWidget* parent)
   if (auto v = Config::instance().get<int>("max_history"); v.has_value()) {
     maxHistoryCount = v.value();
   }
-  connect(homeWidget, &SettingDialog::maxHistoryChanged, this, [this](int count) {
-    maxHistoryCount = count;
-    RemoveOlderItems();
+  Config::instance().addObserver("max_history", [this]() {
+    if (auto v = Config::instance().get<int>("max_history"); v.has_value()) {
+      maxHistoryCount = v.value();
+      RemoveOlderItems();
+    }
   });
 
 #ifdef ENABLE_SYNC

@@ -54,7 +54,35 @@ bool Config::save() const {
   return true;
 }
 
-void Config::setServerConfig(const ServerConfig& server) { data_["server"] = server; }
+Config::CallbackId Config::addObserver(const std::string& key, PrefCallback callback) {
+  auto id = nextId_++;
+  observers_[key].push_back({id, std::move(callback)});
+  return id;
+}
+
+void Config::removeObserver(const std::string& key, CallbackId id) {
+  auto it = observers_.find(key);
+  if (it == observers_.end())
+    return;
+  auto& vec = it->second;
+  vec.erase(std::remove_if(vec.begin(), vec.end(), [id](const ObserverEntry& e) { return e.id == id; }), vec.end());
+  if (vec.empty())
+    observers_.erase(it);
+}
+
+void Config::notify(const std::string& key) {
+  auto it = observers_.find(key);
+  if (it == observers_.end())
+    return;
+  for (const auto& entry : it->second) {
+    entry.callback();
+  }
+}
+
+void Config::setServerConfig(const ServerConfig& server) {
+  data_["server"] = server;
+  notify("server");
+}
 
 std::optional<ServerConfig> Config::getServerConfig() const {
   if (!data_.contains("server"))
@@ -71,7 +99,10 @@ std::optional<ServerConfig> Config::getServerConfig() const {
   return std::nullopt;
 }
 
-void Config::setUserInfo(const UserInfo& userInfo) { data_["user_info"] = userInfo; }
+void Config::setUserInfo(const UserInfo& userInfo) {
+  data_["user_info"] = userInfo;
+  notify("user_info");
+}
 
 std::optional<UserInfo> Config::getUserInfo() const {
   if (!data_.contains("user_info"))

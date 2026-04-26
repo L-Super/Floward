@@ -50,10 +50,9 @@ SettingDialog::SettingDialog(QWidget* parent)
   }
   ui->maxHistorySpinBox->setValue(maxHistory);
 
-  connect(ui->maxHistorySpinBox, &QSpinBox::valueChanged, this, [this](int value) {
+  connect(ui->maxHistorySpinBox, &QSpinBox::valueChanged, this, [](int value) {
     Config::instance().set("max_history", value);
     Config::instance().save();
-    emit maxHistoryChanged(value);
   });
 
   ui->warningLabel->setAlignment(Qt::AlignHCenter);

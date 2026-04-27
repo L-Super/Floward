@@ -437,6 +437,9 @@ void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
 }
 
 void Clipboard::OnItemClicked(QListWidgetItem* listWidgetItem) {
+  if (listWidgetItem == nullptr)
+    return;
+
   Item* item = qobject_cast<Item*>(listWidget->itemWidget(listWidgetItem));
 
   // 设置标志位，忽略下一次dataChanged信号
@@ -483,7 +486,7 @@ void Clipboard::AddItem(const ClipboardSourceInfo& data, const QByteArray& hash)
 }
 
 void Clipboard::RemoveOlderItems() {
-  while (listWidget->count() > maxHistoryCount) {
+  while (listWidget->count() > 0 && listWidget->count() > maxHistoryCount) {
     // 末尾是最旧的条目
     QListWidgetItem* oldest = listWidget->item(listWidget->count() - 1);
     if (!oldest)

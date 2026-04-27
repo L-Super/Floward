@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 project(Floward
-        VERSION 3.0.3.0 # Set application version. For more details, see src/version.h.in
+        VERSION 3.0.4.0 # Set application version. For more details, see src/version.h.in
 )
 
 # Adapt to the backward C++ standard support on Linux platforms.

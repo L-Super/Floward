@@ -44,10 +44,7 @@ SettingDialog::SettingDialog(QWidget* parent)
   ui->autoStartupCheckBox->setChecked(autoStartup.IsAutoStartup());
 
   // 初始化最大历史记录条数
-  int maxHistory{};
-  if (auto v = Config::instance().get<int>("max_history"); v.has_value()) {
-    maxHistory = v.value_or(100);
-  }
+  int maxHistory = Config::instance().get<int>("max_history").value_or(100);
   ui->maxHistorySpinBox->setValue(maxHistory);
 
   connect(ui->maxHistorySpinBox, &QSpinBox::valueChanged, this, [](int value) {
@@ -61,6 +58,13 @@ SettingDialog::SettingDialog(QWidget* parent)
   ui->urlLineEdit->setClearButtonEnabled(true);
   ui->deviceNameLineEdit->setClearButtonEnabled(true);
 
+  // 初始化快捷键显示
+  QString shortcutStr = "Alt+V";
+  if (auto op = Config::instance().get<std::string>("shortcut"); op.has_value() && !op->empty()) {
+    shortcutStr = QString::fromStdString(*op);
+  }
+  ui->keySequenceEdit->setKeySequence(QKeySequence(shortcutStr));
+
   OnThemeChanged(QGuiApplication::styleHints()->colorScheme());
   connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, &SettingDialog::OnThemeChanged);
 
@@ -71,12 +75,6 @@ SettingDialog::SettingDialog(QWidget* parent)
     autoStartup.SetAutoStartup(checked);
   });
   connect(ui->confirmButton, &QPushButton::clicked, this, &SettingDialog::OnSyncPageChanged);
-  // 初始化快捷键显示
-  QString shortcutStr = "Alt+V";
-  if (auto op = Config::instance().get<std::string>("shortcut"); op.has_value() && !op->empty()) {
-    shortcutStr = QString::fromStdString(*op);
-  }
-  ui->keySequenceEdit->setKeySequence(QKeySequence(shortcutStr));
 
   connect(ui->keySequenceConfirmButton, &QPushButton::clicked, this, [this]() {
     auto keySequence = ui->keySequenceEdit->keySequence();
@@ -154,8 +152,9 @@ void SettingDialog::SetOnlineStatus(bool online) {
 
 void SettingDialog::showEvent(QShowEvent* event) {
 #ifdef ENABLE_SYNC
-  if (auto v = Config::instance().get<bool>("online_status"); v.has_value())
+  if (auto v = Config::instance().get<bool>("online_status"); v.has_value()) {
     SetOnlineStatus(v.value());
+  }
 #endif
   QWidget::showEvent(event);
 }

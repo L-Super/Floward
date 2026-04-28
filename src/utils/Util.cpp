@@ -20,16 +20,27 @@
 #endif
 namespace about {
 const QString& IntroductionText() {
-  static const QString aboutText = QString("### 简介\n"
-                                      "一个跨平台的剪贴板工具，可以从剪贴板历史记录中选择对应的项进行粘"
-                                      "贴，支持不同设备之间数据实时同步。\n"
-                                      "### 使用方式\n"
-                                      "默认快捷键 `Alt + V`显示剪贴板\n"
-                                      "### 版本\n"
-                                      "v%1\n"
-                                      "### 地址\n"
-                                      "[L-Super/Floward](https://github.com/L-Super/Floward)")
-                                  .arg(qApp->applicationVersion());
+  static const QString aboutText = QStringLiteral(
+      "### 简介\n"
+      "Floward 是一款跨平台的剪贴板增强工具，提供历史记录管理与多设备实时同步能力，"
+      "让复制粘贴在不同电脑之间无缝衔接，显著提升日常工作效率。\n"
+      "\n"
+      "### 主要特性\n"
+      "- 📋 自动记录剪贴板历史，支持文本、图片等多种类型\n"
+      "- 🔍 快速检索历史条目，一键回填粘贴\n"
+      "- 🔄 多设备实时同步，跨平台无缝协作（Windows / macOS / Linux）\n"
+      "- ⚡ 极简界面与全局快捷键，触手可及\n"
+      "- 🔒 本地存储，数据安全可控（单机版）\n"
+      "\n"
+      "### 使用方式\n"
+      "按下默认快捷键 `Alt + V` 即可呼出剪贴板面板，使用方向键或鼠标选择条目后回车粘贴。\n"
+      "\n"
+      "### 版本\n"
+      "v%1\n"
+      "\n"
+      "### 项目地址\n"
+      "[L-Super/Floward](https://github.com/L-Super/Floward) — 欢迎 Star、Issue 与 PR")
+      .arg(qApp->applicationVersion());
 
   return aboutText;
 }

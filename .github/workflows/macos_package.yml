@@ -10,7 +10,7 @@ jobs:
     name: Build Standalone Version
     runs-on: macos-latest
     env:
-      QT_VERSION: 6.8.0
+      QT_VERSION: 6.10.0
       BUILD_TYPE: Release
       BUILD_VARIANT: standalone
 
@@ -54,7 +54,7 @@ jobs:
     name: Build Sync Version
     runs-on: macos-latest
     env:
-      QT_VERSION: 6.8.0
+      QT_VERSION: 6.10.0
       BUILD_TYPE: Release
       BUILD_VARIANT: sync
 

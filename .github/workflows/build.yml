@@ -23,7 +23,7 @@ jobs:
             fail-fast: false
             matrix:
                 os: [windows-latest, ubuntu-latest, macos-latest]
-                qt_version: [6.8.0]
+                qt_version: [6.10.0]
                 build_type: [Release]
                 build_sync_feature: [ON, OFF]
 

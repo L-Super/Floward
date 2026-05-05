@@ -213,18 +213,12 @@
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="autoStartupCheckBox">
+             <widget class="SwitchButton" name="autoStartupSwitchButton" native="true">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="tristate">
-               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -564,6 +558,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>SwitchButton</class>
+   <extends>QAbstractButton</extends>
+   <header>SwitchButton.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="Clipboard.qrc"/>
  </resources>

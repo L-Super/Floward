@@ -41,7 +41,7 @@ SettingDialog::SettingDialog(QWidget* parent)
   ui->textBrowser->setOpenExternalLinks(true);
 
   AutoStartup autoStartup;
-  ui->autoStartupCheckBox->setChecked(autoStartup.IsAutoStartup());
+  ui->autoStartupSwitchButton->setChecked(autoStartup.IsAutoStartup());
 
   // 初始化最大历史记录条数
   int maxHistory = Config::instance().get<int>("max_history").value_or(100);
@@ -70,9 +70,14 @@ SettingDialog::SettingDialog(QWidget* parent)
 
   connect(buttonGroup, &QButtonGroup::idClicked, this, [this](auto id) { ui->stackedWidget->setCurrentIndex(id); });
 
-  connect(ui->autoStartupCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
+  connect(ui->autoStartupSwitchButton, &SwitchButton::checkStateChanged, this, [](Qt::CheckState state) {
     AutoStartup autoStartup;
-    autoStartup.SetAutoStartup(checked);
+    if (state == Qt::Checked) {
+      autoStartup.SetAutoStartup(true);
+    }
+    else if (state == Qt::Unchecked) {
+      autoStartup.SetAutoStartup(false);
+    }
   });
   connect(ui->confirmButton, &QPushButton::clicked, this, &SettingDialog::OnSyncPageChanged);
 

@@ -57,6 +57,8 @@ add_executable(${PROJECT_NAME}
         ${RES_FILES}
 )
 
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+
 if (ENABLE_SYNC_FEATURE)
     add_subdirectory(net)
 endif ()

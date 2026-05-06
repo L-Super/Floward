@@ -18,6 +18,7 @@
 #include "utils/Config.h"
 #include "utils/Logger.hpp"
 #include "utils/Util.h"
+#include "SwitchButton.h"
 
 SettingDialog::SettingDialog(QWidget* parent)
     : QWidget(parent), ui(new Ui::SettingDialog), buttonGroup(new QButtonGroup(this)) {

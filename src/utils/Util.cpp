@@ -14,8 +14,10 @@
 // clang-format off
 #include <windows.h>
 #include <oleacc.h>
+#include <vector>
 
 #pragma comment(lib, "oleacc.lib")
+#pragma comment(lib, "Version.lib")
 // clang-format on
 #endif
 namespace about {
@@ -188,7 +190,7 @@ std::optional<QRect> GetFocusCaretPosition() {
 
       // Note: if Rect width is 10, but QRect width is 11
       // The precision error is acceptable here
-      return QRect{rect.left,rect.top, rect.right, rect.bottom};
+      return QRect{rect.left, rect.top, rect.right, rect.bottom};
     }
   } while (false);
 
@@ -202,15 +204,60 @@ std::optional<QRect> GetFocusCaretPosition() {
   qDebug() << "All method failed";
   return {};
 }
+
+// Read FileDescription from PE version resource, e.g. "msedge.exe" -> "Microsoft Edge"
+QString GetAppNameFromPE(const QString& appPath) {
+  const std::wstring path = appPath.toStdWString();
+  DWORD dummy = 0;
+  const DWORD size = GetFileVersionInfoSizeW(path.c_str(), &dummy);
+  if (size > 0) {
+    std::vector<BYTE> buf(size);
+    if (GetFileVersionInfoW(path.c_str(), 0, size, buf.data())) {
+      // Query available translations (language + code-page pairs)
+      struct LangCodePage {
+        WORD language;
+        WORD codePage;
+      }* translations = nullptr;
+      UINT transLen = 0;
+
+      if (VerQueryValueW(buf.data(), L"\\VarFileInfo\\Translation", reinterpret_cast<void**>(&translations),
+                         &transLen) &&
+          transLen > 0) {
+        // Iterate all translations, prefer first non-empty FileDescription
+        const UINT count = transLen / sizeof(LangCodePage);
+        for (UINT i = 0; i < count; ++i) {
+          wchar_t subBlock[64];
+          swprintf_s(subBlock, L"\\StringFileInfo\\%04X%04X\\FileDescription", translations[i].language,
+                     translations[i].codePage);
+
+          wchar_t* desc = nullptr;
+          UINT descLen = 0;
+          if (VerQueryValueW(buf.data(), subBlock, reinterpret_cast<void**>(&desc), &descLen) && descLen > 0 &&
+              desc[0] != L'\0') {
+            return QString::fromWCharArray(desc).trimmed();
+          }
+        }
+      }
+    }
+  }
+  return {};
+}
 #endif
 
 QString GetAppName(const QString& appPath) {
   QFileInfo info(appPath);
-#ifdef Q_OS_MAC
+#ifdef Q_OS_WIN
+  auto name = GetAppNameFromPE(appPath);
+  if (!name.isEmpty()) {
+    return name;
+  }
+  // Fallback to exe basename if version info is unavailable.
+  return info.baseName();
+#elif defined(Q_OS_MAC)
   // macOS: strip ".app" suffix, e.g. "Safari.app" -> "Safari"
   return info.baseName();
 #else
-  return info.fileName();
+  return info.baseName();
 #endif
 }
 

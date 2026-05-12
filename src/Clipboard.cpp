@@ -162,6 +162,8 @@ void Clipboard::DataChanged() {
 
   if (mimeData->hasText()) {
     const QString latestText = mimeData->text();
+    if (latestText.isEmpty())
+      return;
 
     sourceInfo.data = latestText;
     hashValue = QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);

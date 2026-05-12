@@ -11,6 +11,31 @@
 #include <QPainterPath>
 #include <QRegion>
 #include <QStyleOption>
+#include <QMetaType>
+
+namespace {
+QString GetFriendlyTypeName(const QVariant& data) {
+  const int typeId = data.metaType().id();
+
+  switch (typeId) {
+    case QMetaType::QString:
+      return QObject::tr("文本");
+    case QMetaType::QImage:
+    case QMetaType::QPixmap:
+      return QObject::tr("图片");
+    case QMetaType::QByteArray:
+      return QObject::tr("二进制数据");
+    case QMetaType::QUrl:
+      return QObject::tr("链接");
+    case QMetaType::QStringList:
+      return QObject::tr("文本列表");
+    case QMetaType::QColor:
+      return QObject::tr("颜色");
+    default:
+      return QObject::tr("其他");
+  }
+}
+} // namespace
 
 CustomToolTip::CustomToolTip(QWidget* parent) : QWidget(parent), ui(new Ui::CustomToolTip) {
   ui->setupUi(this);
@@ -25,7 +50,7 @@ void CustomToolTip::SetData(const ClipboardSourceInfo& sourceInfo) {
   ui->iconLabel->setPixmap(sourceInfo.icon.pixmap(sourceInfo.icon.actualSize(QSize(16, 16))));
   ui->appLabel->setText(sourceInfo.processName);
   ui->timestampLabel->setText(sourceInfo.timestamp.toString("MM-dd hh:mm:ss"));
-  ui->typeLabel->setText(sourceInfo.data.metaType().name());
+  ui->typeLabel->setText(GetFriendlyTypeName(sourceInfo.data));
 }
 
 void CustomToolTip::paintEvent(QPaintEvent* event) {

@@ -90,10 +90,12 @@ SwitchButton::Theme SwitchButton::Theme::fromPalette(const QPalette& pal) {
   t.secondaryColorPressed = t.secondaryColor;
   t.secondaryColorDisabled = pal.color(QPalette::Disabled, QPalette::Text);
 
-  t.borderColor = pal.color(QPalette::Mid);
-  t.borderColorHovered = pal.color(QPalette::Midlight);
-  t.borderColorPressed = pal.color(QPalette::Dark);
-  t.borderColorDisabled = pal.color(QPalette::Disabled, QPalette::Mid);
+  // On some Linux themes (e.g. Adwaita/Yaru), QPalette::Mid is too close to Base,
+  // making the switch border invisible. Ensure minimum contrast against the background.
+  t.borderColor = pal.color(QPalette::Dark);
+  t.borderColorHovered = pal.color(QPalette::Shadow);
+  t.borderColorPressed = pal.color(QPalette::Shadow);
+  t.borderColorDisabled = pal.color(QPalette::Disabled, QPalette::Dark);
 
   t.focusColor = pal.color(QPalette::Highlight);
   return t;

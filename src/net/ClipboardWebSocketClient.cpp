@@ -14,6 +14,9 @@ ClipboardWebSocketClient::ClipboardWebSocketClient(const QUrl& url, QObject* par
   // 重连定时器（首次不启动，按需设置动态间隔）
   reconnectTimer.setSingleShot(true);
   connect(&reconnectTimer, &QTimer::timeout, this, &ClipboardWebSocketClient::tryReconnect);
+
+  connect(&webSocket, &QWebSocket::textMessageReceived, this, &ClipboardWebSocketClient::onTextMessageReceived);
+  connect(&webSocket, &QWebSocket::binaryMessageReceived, this, &ClipboardWebSocketClient::onBinaryMessageReceived);
 }
 
 ClipboardWebSocketClient::~ClipboardWebSocketClient() { disconnectFromServer(); }
@@ -49,10 +52,6 @@ void ClipboardWebSocketClient::onConnected() {
 
   // 订阅 /sync/notify（如果服务端需要额外握手可以在这里发送订阅消息）
   // webSocket.sendTextMessage(QStringLiteral("{\"action\":\"subscribe\",\"topic\":\"/sync/notify\"}"));
-
-  // 监听消息
-  connect(&webSocket, &QWebSocket::textMessageReceived, this, &ClipboardWebSocketClient::onTextMessageReceived);
-  connect(&webSocket, &QWebSocket::binaryMessageReceived, this, &ClipboardWebSocketClient::onBinaryMessageReceived);
 }
 
 void ClipboardWebSocketClient::onTextMessageReceived(const QString& message) {

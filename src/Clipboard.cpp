@@ -323,8 +323,10 @@ bool Clipboard::InitSyncServer() {
         Config::instance().set("online_status", true);
         qDebug() << "login successful";
       }
-      else
+      else {
+        Config::instance().set("online_status", false);
         qDebug() << "login failed." << message;
+      }
     });
     connect(sync.get(), &SyncServer::uploadFinished, [](bool success, const QString& message) {
       if (success) {

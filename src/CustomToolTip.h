@@ -22,9 +22,11 @@ public:
   ~CustomToolTip() override;
 
   void SetData(const ClipboardSourceInfo& sourceInfo);
+  void SetSynced(bool synced);
 
 protected:
   void paintEvent(QPaintEvent* event) override;
 private:
   Ui::CustomToolTip* ui;
+  bool m_synced{false};
 };

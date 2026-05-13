@@ -166,8 +166,8 @@ void Clipboard::DataChanged() {
       return;
 
     sourceInfo.data = latestText;
-    hashValue = QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
-
+    auto hashBytes = QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
+    hashValue = hashBytes.toHex();
     clipData.type = ClipboardDataType::text;
     clipData.data = latestText.toUtf8();
   }
@@ -178,7 +178,8 @@ void Clipboard::DataChanged() {
     QByteArray ba;
     QBuffer buffer(&ba);
     image.save(&buffer, "PNG");
-    hashValue = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
+    auto hashBytes = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
+    hashValue = hashBytes.toHex();
 
     sourceInfo.data = image;
 
@@ -328,17 +329,28 @@ bool Clipboard::InitSyncServer() {
         qDebug() << "login failed." << message;
       }
     });
-    connect(sync.get(), &SyncServer::uploadFinished, [](bool success, const QString& message) {
+    connect(sync.get(), &SyncServer::uploadFinished, [this](bool success, const QString& message) {
+      QString hash;
       if (success) {
         const auto doc = QJsonDocument::fromJson(message.toUtf8());
         const auto obj = doc.object();
         int id = obj.value("id").toInt();
         QString created = obj.value("created_at").toString();
+        hash = obj.value("hash").toString();
 
         spdlog::info("Upload data successful, id: {} created_at: {}", id, created);
       }
       else {
         spdlog::error("Upload data failed. {}", message);
+      }
+
+      auto hashBytes = hash.toUtf8();
+      // 更新对应 Item 的同步状态
+      if (!hash.isEmpty() && hashItemMap.contains(hashBytes)) {
+        auto* listItem = hashItemMap.value(hashBytes);
+        if (auto* item = qobject_cast<Item*>(listWidget->itemWidget(listItem))) {
+          item->SetUploadStatus(success);
+        }
       }
     });
     connect(sync.get(), &SyncServer::imageDownloadFinished,

@@ -36,6 +36,8 @@ public:
   ~Item() override;
 
   void SetData(const ClipboardSourceInfo& data, const QByteArray& hash);
+  void SetUploadStatus(bool success);
+
   void SetListWidgetItem(QListWidgetItem* listWidgetItem);
   QListWidgetItem* GetListWidgetItem() const;
 

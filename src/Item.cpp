@@ -118,6 +118,9 @@ QByteArray Item::GetHashValue() const { return hashValue; }
 
 int Item::GetMetaType() const { return metaType; }
 
+
+void Item::SetUploadStatus(bool success) { tipWidget->SetSynced(success); }
+
 bool Item::eventFilter(QObject* watched, QEvent* event) {
   if (watched == ui->infoPushButton) {
     if (event->type() == QEvent::Enter) {

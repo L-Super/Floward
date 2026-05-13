@@ -53,6 +53,13 @@ void CustomToolTip::SetData(const ClipboardSourceInfo& sourceInfo) {
   ui->typeLabel->setText(GetFriendlyTypeName(sourceInfo.data));
 }
 
+void CustomToolTip::SetSynced(bool synced) {
+  if (m_synced != synced) {
+    m_synced = synced;
+    update(); // 触发重绘
+  }
+}
+
 void CustomToolTip::paintEvent(QPaintEvent* event) {
   QWidget::paintEvent(event);
 
@@ -74,6 +81,17 @@ void CustomToolTip::paintEvent(QPaintEvent* event) {
   painter.setPen(Qt::NoPen);
   painter.setBrush(opt.palette.window());
   painter.drawPath(bgPath);
+
+  // 已同步时绘制左侧竖条
+  if (m_synced) {
+    constexpr qreal barWidth = 3.0;
+    constexpr qreal barMargin = 1.0;
+    QRectF barRect(bgRect.left() + barMargin, bgRect.top() + radius,
+                   barWidth, bgRect.height() - 2 * radius);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor("#4CAF50"));
+    painter.drawRoundedRect(barRect, barWidth / 2, barWidth / 2);
+  }
 
   // 轻描边，增强边缘清晰度
   painter.setPen(QPen(opt.palette.mid(), 1));

@@ -26,6 +26,15 @@ jobs:
           cache: true
           cache-key-prefix: 'Qt'
 
+      - name: Extract and update version from tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          DOTS=$(echo "$VERSION" | tr -cd '.' | wc -c)
+          [ "$DOTS" -lt 3 ] && CMAKE_VERSION="${VERSION}.0" || CMAKE_VERSION="$VERSION"
+          perl -pi -e "s/VERSION \d+\.\d+\.\d+\.\d+/VERSION $CMAKE_VERSION/" CMakeLists.txt
+          echo "Updated CMakeLists.txt VERSION to $CMAKE_VERSION"
+
       - name: Configure CMake for Standalone
         run: cmake -B ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DENABLE_SYNC_FEATURE=OFF
 
@@ -81,6 +90,15 @@ jobs:
           cache: true
           cache-key-prefix: 'Qt'
           modules: 'qtwebsockets'
+
+      - name: Extract and update version from tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          DOTS=$(echo "$VERSION" | tr -cd '.' | wc -c)
+          [ "$DOTS" -lt 3 ] && CMAKE_VERSION="${VERSION}.0" || CMAKE_VERSION="$VERSION"
+          perl -pi -e "s/VERSION \d+\.\d+\.\d+\.\d+/VERSION $CMAKE_VERSION/" CMakeLists.txt
+          echo "Updated CMakeLists.txt VERSION to $CMAKE_VERSION"
 
       - name: Configure CMake for Sync
         run: cmake -B ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DENABLE_SYNC_FEATURE=ON

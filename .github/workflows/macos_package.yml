@@ -15,10 +15,6 @@ jobs:
       BUILD_VARIANT: standalone
 
     steps:
-      - name: Set version
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Checkout Source code
         uses: actions/checkout@v4
 
@@ -28,6 +24,15 @@ jobs:
           version: ${{ env.QT_VERSION }}
           cache: true
           cache-key-prefix: 'Qt'
+
+      - name: Extract and update version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          DOTS=$(echo "$VERSION" | tr -cd '.' | wc -c)
+          [ "$DOTS" -lt 3 ] && CMAKE_VERSION="${VERSION}.0" || CMAKE_VERSION="$VERSION"
+          perl -pi -e "s/VERSION \d+\.\d+\.\d+\.\d+/VERSION $CMAKE_VERSION/" CMakeLists.txt
+          echo "Updated CMakeLists.txt VERSION to $CMAKE_VERSION"
 
       - name: Configure CMake for Standalone
         run: |
@@ -59,11 +64,6 @@ jobs:
       BUILD_VARIANT: sync
 
     steps:
-      - name: Set version
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: Checkout Source code
         uses: actions/checkout@v4
 
@@ -74,6 +74,15 @@ jobs:
           cache: true
           cache-key-prefix: 'Qt'
           modules: 'qtwebsockets'
+
+      - name: Extract and update version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          DOTS=$(echo "$VERSION" | tr -cd '.' | wc -c)
+          [ "$DOTS" -lt 3 ] && CMAKE_VERSION="${VERSION}.0" || CMAKE_VERSION="$VERSION"
+          perl -pi -e "s/VERSION \d+\.\d+\.\d+\.\d+/VERSION $CMAKE_VERSION/" CMakeLists.txt
+          echo "Updated CMakeLists.txt VERSION to $CMAKE_VERSION"
 
       - name: Configure CMake for Sync
         run: |

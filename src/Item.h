@@ -51,8 +51,9 @@ protected:
   void DeleteButtonClicked();
   void ApplyTheme(Qt::ColorScheme colorScheme);
   bool eventFilter(QObject *watched, QEvent *event) override;
-  void ShowImagePreview(QWidget* anchor);
-  void HideImagePreview();
+  void EnsurePreviewLabel();
+  void ShowPreview(QWidget* anchor);
+  void HidePreview();
 
 signals:
   void itemClickedSignal(const QString& text);
@@ -65,7 +66,7 @@ private:
   QByteArray hashValue;
   int metaType{0}; // default is UnknownType
   CustomToolTip* tipWidget;
-  QLabel* imagePreviewLabel{};
+  QLabel* previewLabel{};
 };
 
 #endif // ITEM_H

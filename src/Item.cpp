@@ -31,6 +31,8 @@ QPoint AdjustPopupPosition(QWidget* anchor, const QSize& popupSize) {
 
   return pos;
 }
+
+bool IsPreviewable(int metaType) { return metaType == QMetaType::QImage || metaType == QMetaType::QString; }
 } // namespace
 
 Item::Item(QWidget* parent) : QWidget(parent), ui(new Ui::Item) {
@@ -64,6 +66,7 @@ void Item::SetData(const ClipboardSourceInfo& sourceInfo, const QByteArray& hash
 
   if (metaType == QMetaType::QString) {
     SetText(sourceInfo.data.toString());
+    ui->label->installEventFilter(this);
   }
   else if (metaType == QMetaType::QPixmap) {
     qDebug() << "Item add  Pixmap";
@@ -118,59 +121,82 @@ QByteArray Item::GetHashValue() const { return hashValue; }
 
 int Item::GetMetaType() const { return metaType; }
 
-
 void Item::SetUploadStatus(bool success) { tipWidget->SetSynced(success); }
 
 bool Item::eventFilter(QObject* watched, QEvent* event) {
+  const auto type = event->type();
+  if (type != QEvent::Enter && type != QEvent::Leave)
+    return QWidget::eventFilter(watched, event);
+
   if (watched == ui->infoPushButton) {
-    if (event->type() == QEvent::Enter) {
-      if (QWidget* widget = qobject_cast<QWidget*>(watched)) {
-        tipWidget->adjustSize();
-        tipWidget->move(AdjustPopupPosition(widget, tipWidget->size()));
-        tipWidget->show();
-        return true;
-      }
+    if (type == QEvent::Enter) {
+      tipWidget->adjustSize();
+      tipWidget->move(AdjustPopupPosition(ui->infoPushButton, tipWidget->size()));
+      tipWidget->show();
+      return true;
     }
-    else if (event->type() == QEvent::Leave) {
+    else if (type == QEvent::Leave) {
       tipWidget->hide();
       return true;
     }
   }
-  else if (watched == ui->label && metaType == QMetaType::QImage) {
-    if (event->type() == QEvent::Enter) {
-      ShowImagePreview(ui->label);
+  else if (watched == ui->label && IsPreviewable(metaType)) {
+    if (type == QEvent::Enter) {
+      if (metaType == QMetaType::QString) {
+        // 只在文字溢出时才显示预览
+        QFontMetrics fm(ui->label->font());
+        const QRect contentRect = ui->label->contentsRect();
+        QRect needed = fm.boundingRect(contentRect, Qt::TextWordWrap, ui->label->text());
+        if (needed.height() <= contentRect.height())
+          // 文本没有溢出，不需要预览
+          return true;
+      }
+      ShowPreview(ui->label);
       return true;
     }
-    else if (event->type() == QEvent::Leave) {
-      HideImagePreview();
+    else if (type == QEvent::Leave) {
+      HidePreview();
       return true;
     }
   }
   return QWidget::eventFilter(watched, event);
 }
 
-void Item::ShowImagePreview(QWidget* anchor) {
-  if (!imagePreviewLabel) {
-    imagePreviewLabel = new QLabel(nullptr);
-    imagePreviewLabel->setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint);
-    imagePreviewLabel->setStyleSheet("QLabel { background-color: palette(window); border: 1px solid palette(mid); "
-                                     "border-radius: 6px; padding: 4px; }");
-  }
-
-  constexpr int maxPreviewSize = 400;
-  qreal dpr = imagePreviewLabel->devicePixelRatioF();
-  int scaledMaxSize = static_cast<int>(maxPreviewSize * dpr);
-  QImage scaled = latestImage.scaled(scaledMaxSize, scaledMaxSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-  QPixmap pixmap = QPixmap::fromImage(scaled);
-  pixmap.setDevicePixelRatio(dpr);
-  imagePreviewLabel->setPixmap(pixmap);
-  imagePreviewLabel->adjustSize();
-
-  imagePreviewLabel->move(AdjustPopupPosition(anchor, imagePreviewLabel->size()));
-  imagePreviewLabel->show();
+void Item::EnsurePreviewLabel() {
+  if (previewLabel)
+    return;
+  previewLabel = new QLabel(nullptr);
+  previewLabel->setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint);
+  previewLabel->setStyleSheet("QLabel { background-color: palette(window); border: 1px solid palette(mid); "
+                              "border-radius: 6px; padding: 6px; }");
 }
 
-void Item::HideImagePreview() {
-  if (imagePreviewLabel)
-    imagePreviewLabel->hide();
+void Item::ShowPreview(QWidget* anchor) {
+  EnsurePreviewLabel();
+
+  if (metaType == QMetaType::QImage) {
+    constexpr int maxPreviewSize = 400;
+    qreal dpr = previewLabel->devicePixelRatioF();
+    int scaledMaxSize = static_cast<int>(maxPreviewSize * dpr);
+    QImage scaled = latestImage.scaled(scaledMaxSize, scaledMaxSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    QPixmap pixmap = QPixmap::fromImage(scaled);
+    pixmap.setDevicePixelRatio(dpr);
+    previewLabel->setPixmap(pixmap);
+  }
+  else {
+    previewLabel->setWordWrap(true);
+    previewLabel->setTextFormat(Qt::PlainText);
+    previewLabel->setMaximumWidth(400);
+    previewLabel->setMaximumHeight(300);
+    previewLabel->setText(ui->label->text());
+  }
+
+  previewLabel->adjustSize();
+  previewLabel->move(AdjustPopupPosition(anchor, previewLabel->size()));
+  previewLabel->show();
+}
+
+void Item::HidePreview() {
+  if (previewLabel)
+    previewLabel->hide();
 }

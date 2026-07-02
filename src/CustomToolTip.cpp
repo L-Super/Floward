@@ -88,8 +88,11 @@ void CustomToolTip::paintEvent(QPaintEvent* event) {
     constexpr qreal barMargin = 1.0;
     QRectF barRect(bgRect.left() + barMargin, bgRect.top() + radius,
                    barWidth, bgRect.height() - 2 * radius);
+    QLinearGradient gradient(barRect.topLeft(), barRect.bottomLeft());
+    gradient.setColorAt(0, QColor("#4A90E2"));
+    gradient.setColorAt(1, QColor("#6A5ACD"));
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor("#4CAF50"));
+    painter.setBrush(gradient);
     painter.drawRoundedRect(barRect, barWidth / 2, barWidth / 2);
   }
 

@@ -100,11 +100,11 @@ FetchContent_Declare(QHotkey
         GIT_TAG 4e3a244d87f1f7e741e1395f2ffe825f3a8ada45
 )
 FetchContent_Declare(SingleApplication
-        URL https://github.com/itay-grudev/SingleApplication/archive/refs/tags/v3.5.4.tar.gz
+        URL https://github.com/itay-grudev/SingleApplication/archive/refs/tags/v3.5.6.tar.gz
 )
 FetchContent_Declare(magic_enum
         GIT_REPOSITORY https://github.com/Neargye/magic_enum
-        GIT_TAG v0.9.7
+        GIT_TAG v0.9.8
         GIT_SHALLOW ON
         GIT_PROGRESS ON
 )
@@ -113,7 +113,7 @@ FetchContent_Declare(json
 )
 FetchContent_Declare(spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog
-        GIT_TAG v1.16.0
+        GIT_TAG v1.17.0
         GIT_SHALLOW ON
         GIT_PROGRESS ON
 )

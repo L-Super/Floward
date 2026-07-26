@@ -1,4 +1,5 @@
 #include "ClipboardApiClient.h"
+#include "../utils/Crypto.h"
 #include "../utils/Logger.hpp"
 #include "magic_enum/magic_enum.hpp"
 
@@ -69,14 +70,28 @@ void ClipboardApiClient::uploadClipboard(const ClipboardData& data, const QStrin
   if (data.type == ClipboardDataType::text) {
     typePart.setBody("text");
 
+    // Text is end-to-end encrypted: the server only sees ciphertext.
+    // Wire format: base64([12B nonce][ciphertext][16B GCM tag]).
+    // Base64 keeps the value ASCII-safe so the server can store and forward
+    // it inside JSON strings without any binary handling on its side.
+    const QByteArray encrypted = Crypto::Encrypt(data.data).toBase64();
+    if (encrypted.isEmpty()) {
+      emit uploadFinished(false, "Encryption failed");
+      delete multiPart;
+      return;
+    }
+
     QHttpPart dataPart;
     dataPart.setHeader(QNetworkRequest::ContentDispositionHeader, "form-data; name=\"data\"");
-    dataPart.setBody(data.data);
+    dataPart.setBody(encrypted);
 
     multiPart->append(typePart);
     multiPart->append(dataPart);
   }
   else {
+    // Image/file is uploaded as-is: the server downloads it, stores it, and
+    // hands back a URL. The server must be able to read the bytes, so E2EE
+    // does not apply here — transport security relies on TLS instead.
     auto type = QString::fromStdString(std::string(magic_enum::enum_name(data.type)));
 
     typePart.setBody(type.toUtf8()); // image 或 "file"
@@ -185,6 +200,10 @@ void ClipboardApiClient::handleJsonResponse(QNetworkReply* reply, Endpoint ep) {
 
 void ClipboardApiClient::handleImageDownload(QNetworkReply* reply) {
   const auto bytes = reply->readAll();
+
+  // Images are not E2E-encrypted — the server stores and serves them in
+  // plaintext so it can manage the image lifecycle. Transport security
+  // is provided by TLS.
   QImage image = QImage::fromData(bytes);
 
   if (image.isNull()) {

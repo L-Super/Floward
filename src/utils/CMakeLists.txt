@@ -6,6 +6,12 @@ target_sources(${PROJECT_NAME} PUBLIC
         Expected.hpp
 )
 
+if (ENABLE_SYNC_FEATURE)
+    target_sources(${PROJECT_NAME} PUBLIC
+            Crypto.cpp Crypto.h
+    )
+endif ()
+
 if (APPLE)
     target_sources(${PROJECT_NAME} PRIVATE
             ClipboardPollHelper.h

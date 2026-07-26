@@ -6,6 +6,8 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets REQUIRED)
 if (ENABLE_SYNC_FEATURE)
     find_package(QT NAMES Qt6 Qt5 COMPONENTS Network WebSockets REQUIRED)
     find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Network WebSockets REQUIRED)
+    # OpenSSL is required by the AES-256-GCM encrypt/decrypt helper (src/utils/Crypto.cpp)
+    find_package(OpenSSL REQUIRED)
 endif ()
 
 get_target_property(QmakeExecutable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
@@ -135,6 +137,7 @@ if (ENABLE_SYNC_FEATURE)
     target_link_libraries(${PROJECT_NAME}
             Qt${QT_VERSION_MAJOR}::Network
             Qt${QT_VERSION_MAJOR}::WebSockets
+            OpenSSL::Crypto
     )
 endif ()
 

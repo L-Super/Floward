@@ -101,6 +101,8 @@ jobs:
           echo "Updated CMakeLists.txt VERSION to $CMAKE_VERSION"
 
       - name: Configure CMake for Sync
+        env:
+          CRYPTO_KEY: ${{ secrets.CRYPTO_KEY }}
         run: cmake -B ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DENABLE_SYNC_FEATURE=ON
 
       - name: Build Sync

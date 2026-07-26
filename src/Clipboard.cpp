@@ -13,6 +13,7 @@
 #endif
 
 #include "utils/Config.h"
+#include "utils/Crypto.h"
 #include "utils/Logger.hpp"
 #include "utils/Util.h"
 
@@ -385,9 +386,18 @@ bool Clipboard::InitSyncServer() {
 
         if (type == "text") {
           if (!data.isEmpty()) {
-            // 忽略下一次dataChanged信号
-            ignoreNetDataChange = true;
-            clipboard->setText(data);
+            // data is base64(nonce || ciphertext || tag). Decode and decrypt
+            // before restoring the clipboard text.
+            const auto payload = QByteArray::fromBase64(data.toUtf8());
+            const auto plain = Crypto::Decrypt(payload);
+            if (plain.isEmpty()) {
+              spdlog::warn("Failed to decrypt synced text payload");
+            }
+            else {
+              // 忽略下一次dataChanged信号
+              ignoreNetDataChange = true;
+              clipboard->setText(QString::fromUtf8(plain));
+            }
           }
         }
         else if (type == "image") {

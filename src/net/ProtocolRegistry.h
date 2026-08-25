@@ -36,5 +36,11 @@ private:
   void RegisterLinuxProtocol(const QString& protocolName);
   void UnregisterLinuxProtocol(const QString& protocolName);
   bool IsLinuxProtocolRegistered(const QString& protocolName);
+#elif defined(Q_OS_MACOS) || defined(Q_OS_MAC)
+  // macOS custom URL schemes are declared statically in the app bundle's
+  // Info.plist and are registered with Launch Services by macOS.
+  void RegisterMacProtocol(const QString& protocolName);
+  void UnregisterMacProtocol(const QString& protocolName);
+  bool IsMacProtocolRegistered(const QString& protocolName);
 #endif
 };

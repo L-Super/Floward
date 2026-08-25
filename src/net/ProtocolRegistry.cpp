@@ -22,6 +22,8 @@ void ProtocolRegistry::RegisterProtocol(const QString& protocolName) {
   RegisterWinProtocol(protocolName);
 #elif defined(Q_OS_LINUX)
   RegisterLinuxProtocol(protocolName);
+#elif defined(Q_OS_MACOS) || defined(Q_OS_MAC)
+  RegisterMacProtocol(protocolName);
 #endif
 }
 
@@ -30,6 +32,8 @@ void ProtocolRegistry::UnregisterProtocol(const QString& protocolName) {
   UnregisterWinProtocol(protocolName);
 #elif defined(Q_OS_LINUX)
   UnregisterLinuxProtocol(protocolName);
+#elif defined(Q_OS_MACOS) || defined(Q_OS_MAC)
+  UnregisterMacProtocol(protocolName);
 #endif
 }
 
@@ -38,6 +42,8 @@ bool ProtocolRegistry::IsProtocolRegistered(const QString& protocolName) {
   return IsWinProtocolRegistered(protocolName);
 #elif defined(Q_OS_LINUX)
   return IsLinuxProtocolRegistered(protocolName);
+#elif defined(Q_OS_MACOS) || defined(Q_OS_MAC)
+  return IsMacProtocolRegistered(protocolName);
 #endif
   return false;
 }
@@ -131,5 +137,23 @@ bool ProtocolRegistry::IsLinuxProtocolRegistered(const QString& protocolName) {
                         QString("/%1-protocol-handler.desktop").arg(protocolName);
 
   return QFile::exists(desktopPath);
+}
+#elif defined(Q_OS_MACOS) || defined(Q_OS_MAC)
+void ProtocolRegistry::RegisterMacProtocol(const QString& protocolName) {
+  // Launch Services reads CFBundleURLTypes from Info.plist when the .app is
+  // installed/opened. There is no per-user registry to update at runtime.
+  spdlog::info("macOS URL scheme '{}' is declared in the application bundle", protocolName.toStdString());
+}
+
+void ProtocolRegistry::UnregisterMacProtocol(const QString& protocolName) {
+  // The scheme belongs to the application bundle; removing it requires
+  // removing the application or changing its Info.plist.
+  spdlog::info("macOS URL scheme '{}' is managed by the application bundle", protocolName.toStdString());
+}
+
+bool ProtocolRegistry::IsMacProtocolRegistered(const QString& protocolName) {
+  Q_UNUSED(protocolName);
+  // The scheme is statically registered by CFBundleURLTypes in Info.plist.
+  return true;
 }
 #endif

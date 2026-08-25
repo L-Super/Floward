@@ -72,7 +72,7 @@ private:
   int maxHistoryCount{100};
   bool ignoreNextDataChange{false};
   bool ignoreNetDataChange{false};
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
   QTimer* clipboardPollTimer{};
   int lastChangeCount{};
 #endif

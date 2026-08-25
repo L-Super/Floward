@@ -83,7 +83,7 @@ QString GetClipboardSourceAppPath() {
   }
 
   return GetProcessPath(clipboardOwner);
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
   return GetFrontmostAppPath();
 #else
   return {};
@@ -244,6 +244,12 @@ QString GetAppNameFromPE(const QString& appPath) {
 }
 #endif
 
+#ifdef Q_OS_LINUX
+std::optional<QRect> GetFocusCaretPosition() {
+  return std::nullopt;
+}
+#endif
+
 QString GetAppName(const QString& appPath) {
   QFileInfo info(appPath);
 #ifdef Q_OS_WIN
@@ -253,7 +259,7 @@ QString GetAppName(const QString& appPath) {
   }
   // Fallback to exe basename if version info is unavailable.
   return info.baseName();
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
   // macOS: strip ".app" suffix, e.g. "Safari.app" -> "Safari"
   return info.baseName();
 #else

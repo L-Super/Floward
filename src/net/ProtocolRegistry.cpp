@@ -22,7 +22,7 @@ void ProtocolRegistry::RegisterProtocol(const QString& protocolName) {
   RegisterWinProtocol(protocolName);
 #elif defined(Q_OS_LINUX)
   RegisterLinuxProtocol(protocolName);
-#elif defined(Q_OS_MACOS) || defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
   RegisterMacProtocol(protocolName);
 #endif
 }
@@ -32,7 +32,7 @@ void ProtocolRegistry::UnregisterProtocol(const QString& protocolName) {
   UnregisterWinProtocol(protocolName);
 #elif defined(Q_OS_LINUX)
   UnregisterLinuxProtocol(protocolName);
-#elif defined(Q_OS_MACOS) || defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
   UnregisterMacProtocol(protocolName);
 #endif
 }
@@ -42,7 +42,7 @@ bool ProtocolRegistry::IsProtocolRegistered(const QString& protocolName) {
   return IsWinProtocolRegistered(protocolName);
 #elif defined(Q_OS_LINUX)
   return IsLinuxProtocolRegistered(protocolName);
-#elif defined(Q_OS_MACOS) || defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
   return IsMacProtocolRegistered(protocolName);
 #endif
   return false;
@@ -138,7 +138,7 @@ bool ProtocolRegistry::IsLinuxProtocolRegistered(const QString& protocolName) {
 
   return QFile::exists(desktopPath);
 }
-#elif defined(Q_OS_MACOS) || defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
 void ProtocolRegistry::RegisterMacProtocol(const QString& protocolName) {
   // Launch Services reads CFBundleURLTypes from Info.plist when the .app is
   // installed/opened. There is no per-user registry to update at runtime.

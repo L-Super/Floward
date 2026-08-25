@@ -39,7 +39,7 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 #include "utils/ClipboardPollHelper.h"
 #endif
 
@@ -98,7 +98,7 @@ Clipboard::Clipboard(QWidget* parent)
   connect(listWidget, &QListWidget::itemClicked, this, &Clipboard::OnItemClicked);
   connect(clearButton, &QPushButton::clicked, this, &Clipboard::ClearItems);
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
   // macOS: QClipboard::dataChanged is unreliable when the app is in the background.
   // Poll NSPasteboard.changeCount to detect clipboard changes reliably.
   lastChangeCount = getClipboardChangeCount();
@@ -229,7 +229,6 @@ void Clipboard::RemoveItem(QListWidgetItem* item) {
 }
 
 void Clipboard::StayOnTop() {
-#if defined(Q_OS_WIN) || defined(Q_OS_MAC)
   auto caretRect = utils::GetFocusCaretPosition();
   if (caretRect.has_value()) {
     QPoint targetPos = adjustPosition(caretRect.value());
@@ -237,7 +236,6 @@ void Clipboard::StayOnTop() {
     move(targetPos);
     qDebug() << "move to target position" << targetPos;
   }
-#endif
 
   show();
   activateWindow();

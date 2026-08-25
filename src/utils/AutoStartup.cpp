@@ -40,7 +40,7 @@ void AutoStartup::SetAutoStartup(bool enable) {
   SetWinAutoStartup(enable);
 #elif defined(Q_OS_LINUX)
   SetLinuxAutoStartup(enable);
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
   SetMacAutoStartup(enable);
 #endif
 }
@@ -50,7 +50,7 @@ bool AutoStartup::IsAutoStartup() {
   return IsWinAutoStartup();
 #elif defined(Q_OS_LINUX)
   return IsLinuxAutoStartup();
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
   return IsMacAutoStartup();
 #endif
 
@@ -173,7 +173,7 @@ bool AutoStartup::IsLinuxAutoStartup() {
   return value == "false" ? true : false;
 }
 
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_MACOS)
 void AutoStartup::SetMacAutoStartup(bool enable) {
   QString launchAgentDirPath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/Library/LaunchAgents";
   // 尝试从App的Info.plist中读取CFBundleIdentifier

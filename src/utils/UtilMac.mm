@@ -106,4 +106,10 @@ std::optional<QRect> GetFocusCaretPosition() {
     qDebug() << "macOS: all caret position methods failed";
     return {};
 }
+
+void ActivateApplication() { [NSApp activateIgnoringOtherApps:YES]; }
+
+void SetDockIconVisible(bool visible) {
+  [NSApp setActivationPolicy:(visible ? NSApplicationActivationPolicyRegular : NSApplicationActivationPolicyAccessory)];
+}
 } // namespace utils

@@ -622,7 +622,22 @@ void Clipboard::showEvent(QShowEvent* event) {
     listWidget->scrollToTop();
   }
 
+#ifdef Q_OS_MACOS
+  // 与 Windows 保持一致：窗口可见时显示 Dock 图标并前置到前台
+  utils::SetDockIconVisible(true);
+  utils::ActivateApplication();
+#endif
+
   QWidget::showEvent(event);
+}
+
+void Clipboard::hideEvent(QHideEvent* event) {
+#ifdef Q_OS_MACOS
+  // 与 Windows 任务栏一致：窗口隐藏后从 Dock 移除，仅保留菜单栏托盘入口
+  utils::SetDockIconVisible(false);
+#endif
+
+  QWidget::hideEvent(event);
 }
 
 void Clipboard::closeEvent(QCloseEvent* event) {

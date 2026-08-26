@@ -36,5 +36,11 @@ QString GetProcessPath(HWND hwnd);
 QString GetFrontmostAppPath();
 
 QIcon GetAppIconFromBundle(const QString& appPath);
+
+void ActivateApplication();
+void SetDockIconVisible(bool visible);
+#else
+inline void ActivateApplication() {}
+inline void SetDockIconVisible(bool) {}
 #endif
 } // namespace utils

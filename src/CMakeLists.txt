@@ -75,7 +75,7 @@ elseif (APPLE)
     set_source_files_properties(${MAC_RES_PATH}/icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 
     set_target_properties(${PROJECT_NAME} PROPERTIES
-            MACOSX_BUNDLE_BUNDLE_NAME "${PROJECT_NAME}"
+            MACOSX_BUNDLE_EXECUTABLE_NAME "${PROJECT_NAME}"
             MACOSX_BUNDLE_ICON_FILE "icon.icns"
             MACOSX_BUNDLE_GUI_IDENTIFIER "com.Floward.Floward"
             MACOSX_BUNDLE_INFO_STRING ${APP_DESCRIPTION}

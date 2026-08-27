@@ -173,15 +173,47 @@ void Clipboard::DataChanged() {
   }
   else if (mimeData->hasImage()) {
     // 将图片数据转为QImage
-    auto image = qvariant_cast<QImage>(mimeData->imageData());
+    const auto imageData = mimeData->imageData();
+    if (!imageData.canConvert<QImage>()) {
+      spdlog::warn("Mime data can't convert to QImage");
+      return;
+    }
+
+    const auto sourceImage = qvariant_cast<QImage>(imageData);
+    // 检查图片是否为空、宽高是否合法
+    if (sourceImage.isNull() || sourceImage.width() <= 0 || sourceImage.height() <= 0) {
+      spdlog::warn("Clipboard image is invalid: {}x{}", sourceImage.width(), sourceImage.height());
+      return;
+    }
+
+
+    // 限制最大像素数为 1 亿
+    constexpr qint64 kMaxImagePixels = 100000000;
+    const qint64 pixelCount = static_cast<qint64>(sourceImage.width()) * sourceImage.height();
+    if (pixelCount > kMaxImagePixels) {
+      spdlog::warn("Clipboard image is too large: {}x{}", sourceImage.width(), sourceImage.height());
+      return;
+    }
+
+    const auto image = sourceImage.convertToFormat(QImage::Format_RGBA8888);
+    if (image.isNull()) {
+      spdlog::warn("Failed to convert clipboard image to RGBA8888");
+      return;
+    }
+
+
     qDebug() << "image format" << image.format();
     QByteArray ba;
     QBuffer buffer(&ba);
-    image.save(&buffer, "PNG");
+    if (!buffer.open(QIODevice::WriteOnly) || !image.save(&buffer, "PNG")) {
+      spdlog::warn("Failed to encode clipboard image as PNG");
+      return;
+    }
     auto hashBytes = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
     hashValue = hashBytes.toHex();
 
     sourceInfo.data = image;
+    qDebug() << "clipboard image size:" << image.size() << "format:" << image.format();
 
     clipData.type = ClipboardDataType::image;
     clipData.data = ba;

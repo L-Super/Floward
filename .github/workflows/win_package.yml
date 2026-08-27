@@ -151,20 +151,30 @@ jobs:
           name: Floward-Sync
           path: artifacts/sync
 
+      - name: Generate SHA256 Checksums
+        shell: bash
+        run: |
+          shopt -s nullglob
+          for file in artifacts/standalone/*.exe artifacts/sync/*.exe; do
+            (cd "$(dirname "$file")" && sha256sum "$(basename "$file")") > "$file.sha256"
+          done
+
       - name: Create Release and Upload All Artifacts
         uses: softprops/action-gh-release@v2
         with:
           files: |
             artifacts/standalone/*.exe
+            artifacts/standalone/*.exe.sha256
             artifacts/sync/*.exe
+            artifacts/sync/*.exe.sha256
           draft: false
           prerelease: false
           generate_release_notes: true
           body: |
             ## Download Options
-            
+
             Please choose the version that fits your needs:
-            
+
             *   **Standalone**: Purely local. Data stays on your device. No internet required.
             *   **Sync**: Multi-device synchronization support. Keep your data consistent across devices.
 

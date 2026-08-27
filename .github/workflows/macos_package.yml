@@ -124,9 +124,18 @@ jobs:
           name: Floward-macOS-Sync
           path: artifacts/sync
 
+      - name: Generate SHA256 Checksums
+        run: |
+          shopt -s nullglob
+          for file in artifacts/standalone/*.dmg artifacts/sync/*.dmg; do
+            (cd "$(dirname "$file")" && shasum -a 256 "$(basename "$file")") > "$file.sha256"
+          done
+
       - name: Create Release and Upload All Artifacts
         uses: softprops/action-gh-release@v2
         with:
           files: |
             artifacts/standalone/*.dmg
+            artifacts/standalone/*.dmg.sha256
             artifacts/sync/*.dmg
+            artifacts/sync/*.dmg.sha256

@@ -154,11 +154,19 @@ jobs:
           name: Floward-Linux-Sync
           path: ./artifacts
 
+      - name: Generate SHA256 Checksums
+        run: |
+          shopt -s nullglob
+          for file in ./artifacts/Floward*.AppImage; do
+            (cd "$(dirname "$file")" && sha256sum "$(basename "$file")") > "$file.sha256"
+          done
+
       - name: Create Release and Upload Artifacts
         uses: softprops/action-gh-release@v2
         with:
           files: |
             ./artifacts/Floward*.AppImage
+            ./artifacts/Floward*.AppImage.sha256
           draft: false
           prerelease: false
           generate_release_notes: true

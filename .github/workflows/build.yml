@@ -9,12 +9,14 @@ on:
             - "README.md"
             - "README_zh.md"
             - "LICENSE"
+            - ".clang-format"
     pull_request:
         branches: ["main"]
         paths-ignore:
             - "README.md"
             - "README_zh.md"
             - "LICENSE"
+            - ".clang-format"
 
 jobs:
     platform-build:

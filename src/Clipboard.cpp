@@ -160,18 +160,9 @@ void Clipboard::DataChanged() {
     sourceInfo.icon = utils::GetAppIcon(sourceInfo.processPath);
   }
 
-  if (mimeData->hasText()) {
-    const QString latestText = mimeData->text();
-    if (latestText.isEmpty())
-      return;
-
-    sourceInfo.data = latestText;
-    auto hashBytes = QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
-    hashValue = hashBytes.toHex();
-    clipData.type = ClipboardDataType::text;
-    clipData.data = latestText.toUtf8();
-  }
-  else if (mimeData->hasImage()) {
+  // 网页图片通常同时包含 text/html、text/plain 和 image 数据。
+  // 必须优先处理图片，否则会把网页提供的“[图片]”占位文本记录为剪贴板内容。
+  if (mimeData->hasImage()) {
     // 将图片数据转为QImage
     const auto imageData = mimeData->imageData();
     if (!imageData.canConvert<QImage>()) {
@@ -218,6 +209,18 @@ void Clipboard::DataChanged() {
     clipData.type = ClipboardDataType::image;
     clipData.data = ba;
   }
+  else if (mimeData->hasText()) {
+    const QString latestText = mimeData->text();
+    if (latestText.isEmpty())
+      return;
+
+    sourceInfo.data = latestText;
+    auto hashBytes = QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
+    hashValue = hashBytes.toHex();
+    clipData.type = ClipboardDataType::text;
+    clipData.data = latestText.toUtf8();
+  }
+
   else if (mimeData->hasUrls()) {
     qDebug() << "has urls" << mimeData->urls();
   }

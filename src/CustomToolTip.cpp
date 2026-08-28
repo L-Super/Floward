@@ -9,7 +9,6 @@
 
 #include <QPainter>
 #include <QPainterPath>
-#include <QRegion>
 #include <QStyleOption>
 #include <QMetaType>
 
@@ -61,22 +60,20 @@ void CustomToolTip::SetSynced(bool synced) {
 }
 
 void CustomToolTip::paintEvent(QPaintEvent* event) {
-  QWidget::paintEvent(event);
+  Q_UNUSED(event);
 
   QStyleOption opt;
   opt.initFrom(this);
 
   QPainter painter(this);
   painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+  painter.fillRect(rect(), Qt::transparent);
 
   // 圆角背景
-  const qreal radius = 10.0;
-  QRectF bgRect = QRectF(this->rect()).adjusted(0.5, 0.5, -0.5, -0.5);
+  constexpr qreal radius = 10.0;
+  const QRectF bgRect = QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5);
   QPainterPath bgPath;
   bgPath.addRoundedRect(bgRect, radius, radius);
-
-  // 透明背景，避免黑底
-  painter.fillRect(rect(), Qt::transparent);
 
   painter.setPen(Qt::NoPen);
   painter.setBrush(opt.palette.window());
@@ -86,21 +83,19 @@ void CustomToolTip::paintEvent(QPaintEvent* event) {
   if (m_synced) {
     constexpr qreal barWidth = 3.0;
     constexpr qreal barMargin = 1.0;
-    QRectF barRect(bgRect.left() + barMargin, bgRect.top() + radius,
-                   barWidth, bgRect.height() - 2 * radius);
+    const QRectF barRect(bgRect.left() + barMargin, bgRect.top() + radius,
+                         barWidth, bgRect.height() - 2 * radius);
     QLinearGradient gradient(barRect.topLeft(), barRect.bottomLeft());
     gradient.setColorAt(0, QColor("#4A90E2"));
     gradient.setColorAt(1, QColor("#6A5ACD"));
-    painter.setPen(Qt::NoPen);
     painter.setBrush(gradient);
     painter.drawRoundedRect(barRect, barWidth / 2, barWidth / 2);
   }
 
   // 轻描边，增强边缘清晰度
-  painter.setPen(QPen(opt.palette.mid(), 1));
+  QPen borderPen(opt.palette.mid(), 1);
+  borderPen.setJoinStyle(Qt::RoundJoin);
+  painter.setPen(borderPen);
   painter.setBrush(Qt::NoBrush);
   painter.drawPath(bgPath);
-
-  // 应用圆角遮罩，去掉矩形四角
-  setMask(QRegion(bgPath.toFillPolygon().toPolygon()));
 }

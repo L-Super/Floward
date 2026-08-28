@@ -8,6 +8,8 @@
 #include <QGuiApplication>
 #include <QLabel>
 #include <QListWidgetItem>
+#include <QPainter>
+#include <QPainterPath>
 #include <QPixmap>
 #include <QScreen>
 #include <QStyleHints>
@@ -16,6 +18,33 @@
 #include "CustomToolTip.h"
 
 namespace {
+class RoundedPreviewLabel final : public QLabel {
+public:
+  explicit RoundedPreviewLabel(QWidget* parent = nullptr) : QLabel(parent) {
+    setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setAutoFillBackground(false);
+    setContentsMargins(6, 6, 6, 6);
+  }
+
+protected:
+  void paintEvent(QPaintEvent* event) override {
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+
+    const QRectF backgroundRect = QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5);
+    QPainterPath backgroundPath;
+    backgroundPath.addRoundedRect(backgroundRect, 10.0, 10.0);
+
+    painter.fillPath(backgroundPath, palette().color(QPalette::Window));
+    painter.setPen(QPen(palette().color(QPalette::Mid), 1));
+    painter.drawPath(backgroundPath);
+    painter.setClipPath(backgroundPath);
+
+    QLabel::paintEvent(event);
+  }
+};
+
 QPoint AdjustPopupPosition(QWidget* anchor, const QSize& popupSize) {
   QPoint pos = anchor->mapToGlobal(QPoint(0, anchor->height()));
 
@@ -165,10 +194,7 @@ bool Item::eventFilter(QObject* watched, QEvent* event) {
 void Item::EnsurePreviewLabel() {
   if (previewLabel)
     return;
-  previewLabel = new QLabel(nullptr);
-  previewLabel->setWindowFlags(Qt::ToolTip | Qt::FramelessWindowHint);
-  previewLabel->setStyleSheet("QLabel { background-color: palette(window); border: 1px solid palette(mid); "
-                              "border-radius: 6px; padding: 6px; }");
+  previewLabel = new RoundedPreviewLabel();
 }
 
 void Item::ShowPreview(QWidget* anchor) {

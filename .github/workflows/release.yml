@@ -1,0 +1,300 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to use for manual runs, with or without leading v
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  QT_VERSION: 6.10.0
+  BUILD_TYPE: Release
+
+jobs:
+  build-package:
+    name: Build ${{ matrix.platform }} ${{ matrix.variant }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            os: windows-latest
+            artifact_id: windows-standalone
+            variant: standalone
+            enable_sync_feature: OFF
+          - platform: windows
+            os: windows-latest
+            artifact_id: windows-sync
+            variant: sync
+            enable_sync_feature: ON
+          - platform: macos
+            os: macos-latest
+            artifact_id: macos-standalone
+            variant: standalone
+            enable_sync_feature: OFF
+          - platform: macos
+            os: macos-latest
+            artifact_id: macos-sync
+            variant: sync
+            enable_sync_feature: ON
+          - platform: linux
+            os: ubuntu-22.04
+            artifact_id: linux-standalone
+            variant: standalone
+            enable_sync_feature: OFF
+          - platform: linux
+            os: ubuntu-22.04
+            artifact_id: linux-sync
+            variant: sync
+            enable_sync_feature: ON
+
+    steps:
+      - name: Checkout Source code
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          cache: true
+          cache-key-prefix: 'Qt'
+          modules: 'qtwebsockets'
+
+      - name: Extract and update version from tag
+        id: version
+        env:
+          MANUAL_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            TAG_VERSION="${MANUAL_VERSION#v}"
+          else
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          DOTS=$(printf '%s' "$TAG_VERSION" | tr -cd '.' | wc -c)
+          if [ "$DOTS" -lt 3 ]; then
+            CMAKE_VERSION="${TAG_VERSION}.0"
+          else
+            CMAKE_VERSION="$TAG_VERSION"
+          fi
+
+          perl -pi -e "s/VERSION \d+\.\d+\.\d+\.\d+/VERSION $CMAKE_VERSION/" CMakeLists.txt
+          echo "Updated CMakeLists.txt VERSION to $CMAKE_VERSION"
+
+          {
+            echo "tag_version=$TAG_VERSION"
+            echo "cmake_version=$CMAKE_VERSION"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Configure CMake
+        run: >
+          cmake -B ${{ github.workspace }}/build-${{ matrix.artifact_id }}
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+          -DENABLE_SYNC_FEATURE=${{ matrix.enable_sync_feature }}
+
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build-${{ matrix.artifact_id }} --config ${{ env.BUILD_TYPE }}
+
+      - name: Install NSIS (Windows)
+        if: matrix.platform == 'windows'
+        run: |
+          choco install nsis -y
+          echo "NSIS_PATH=C:\Program Files\NSIS" >> $env:GITHUB_ENV
+
+      - name: Package Windows build
+        if: matrix.platform == 'windows'
+        run: >
+          python3 scripts/build_windows_package.py
+          --output-dir ${{ github.workspace }}/build-${{ matrix.artifact_id }}/src/${{ env.BUILD_TYPE }}
+          --variant ${{ matrix.variant }}
+
+      - name: Create macOS DMG
+        if: matrix.platform == 'macos'
+        uses: L-Super/create-dmg-actions@v1
+        with:
+          dmg_name: "Floward_${{ steps.version.outputs.tag_version }}_${{ matrix.variant == 'standalone' && 'Standalone' || 'Sync' }}"
+          src_dir: '${{ github.workspace }}/build-${{ matrix.artifact_id }}/src/Floward.app'
+
+      - name: Install AppImage dependencies (Linux)
+        if: matrix.platform == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y libfuse2
+
+      - name: Package Linux build
+        if: matrix.platform == 'linux'
+        run: >
+          python3 scripts/build_linux_package.py
+          --output-dir ${{ github.workspace }}/build-${{ matrix.artifact_id }}/src
+          --app-name Floward
+          --format appimage
+
+      - name: Normalize artifact
+        env:
+          TAG_VERSION: ${{ steps.version.outputs.tag_version }}
+          CMAKE_VERSION: ${{ steps.version.outputs.cmake_version }}
+        shell: bash
+        run: |
+          shopt -s nullglob
+          mkdir -p dist
+
+          if [ "${{ matrix.variant }}" = "standalone" ]; then
+            VARIANT_LABEL="Standalone"
+          else
+            VARIANT_LABEL="Sync"
+          fi
+
+          case "${{ matrix.platform }}" in
+            windows)
+              TARGET_NAME="Floward_${CMAKE_VERSION}_x64_${VARIANT_LABEL}_Setup.exe"
+              MATCHES=("${GITHUB_WORKSPACE}/build-${{ matrix.artifact_id }}/src/output/${TARGET_NAME}")
+              ;;
+            macos)
+              TARGET_NAME="Floward_${TAG_VERSION}_${VARIANT_LABEL}.dmg"
+              MATCHES=("${GITHUB_WORKSPACE}/Floward_${TAG_VERSION}_${VARIANT_LABEL}"*.dmg)
+              ;;
+            linux)
+              TARGET_NAME="Floward_${TAG_VERSION}_${VARIANT_LABEL}_x86_64.AppImage"
+              MATCHES=("${GITHUB_WORKSPACE}/build-${{ matrix.artifact_id }}/src/Floward"*.AppImage)
+              ;;
+          esac
+
+          if [ "${#MATCHES[@]}" -ne 1 ] || [ ! -f "${MATCHES[0]}" ]; then
+            echo "Expected exactly one package for ${{ matrix.platform }} ${{ matrix.variant }}, found ${#MATCHES[@]}"
+            ls -la "${GITHUB_WORKSPACE}" || true
+            ls -la "${GITHUB_WORKSPACE}/build-${{ matrix.artifact_id }}/src" || true
+            exit 1
+          fi
+
+          cp "${MATCHES[0]}" "dist/${TARGET_NAME}"
+
+      - name: Verify normalized artifact
+        shell: bash
+        run: |
+          shopt -s nullglob
+          FILES=(dist/*)
+          if [ "${#FILES[@]}" -ne 1 ]; then
+            echo "Expected exactly one normalized artifact, found ${#FILES[@]}"
+            ls -la dist || true
+            exit 1
+          fi
+
+      - name: Upload normalized artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.artifact_id }}
+          path: dist/*
+          retention-days: 7
+
+  create-release:
+    name: Create Release
+    if: github.event_name == 'push'
+    needs: build-package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: release-assets
+
+      - name: Generate release files
+        shell: bash
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          DOTS=$(printf '%s' "$TAG_VERSION" | tr -cd '.' | wc -c)
+          if [ "$DOTS" -lt 3 ]; then
+            CMAKE_VERSION="${TAG_VERSION}.0"
+          else
+            CMAKE_VERSION="$TAG_VERSION"
+          fi
+          export TAG_VERSION CMAKE_VERSION
+
+          EXPECTED=(
+            "Floward_${CMAKE_VERSION}_x64_Standalone_Setup.exe"
+            "Floward_${CMAKE_VERSION}_x64_Sync_Setup.exe"
+            "Floward_${TAG_VERSION}_Standalone.dmg"
+            "Floward_${TAG_VERSION}_Sync.dmg"
+            "Floward_${TAG_VERSION}_Standalone_x86_64.AppImage"
+            "Floward_${TAG_VERSION}_Sync_x86_64.AppImage"
+          )
+
+          for file in "${EXPECTED[@]}"; do
+            if [ ! -f "release-assets/$file" ]; then
+              echo "Missing expected artifact: release-assets/$file"
+              ls -la release-assets || true
+              exit 1
+            fi
+          done
+
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          tag_version = os.environ["TAG_VERSION"]
+          cmake_version = os.environ["CMAKE_VERSION"]
+          repository = os.environ["GITHUB_REPOSITORY"]
+          tag_name = os.environ["GITHUB_REF_NAME"]
+          asset_dir = Path("release-assets")
+
+          def compute_sha256(filename: str) -> str:
+              return hashlib.sha256((asset_dir / filename).read_bytes()).hexdigest()
+
+          sync_files = {
+              "windows-x86_64": f"Floward_{cmake_version}_x64_Sync_Setup.exe",
+              "macos-universal": f"Floward_{tag_version}_Sync.dmg",
+              "linux-x86_64": f"Floward_{tag_version}_Sync_x86_64.AppImage",
+          }
+
+          latest = {
+              "version": cmake_version,
+              "notes": "",
+              "platforms": {
+                  platform: {
+                      "url": f"https://github.com/{repository}/releases/download/{tag_name}/{filename}",
+                      "sha256": compute_sha256(filename),
+                  }
+                  for platform, filename in sync_files.items()
+              },
+          }
+
+          with open("latest.json", "w", encoding="utf-8", newline="\n") as handle:
+              json.dump(latest, handle, ensure_ascii=False, indent=2)
+              handle.write("\n")
+          PY
+
+      - name: Create release and upload artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-assets/*.exe
+            release-assets/*.dmg
+            release-assets/*.AppImage
+            latest.json
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## Download Options
+
+            Please choose the version that fits your needs:
+
+            *   **Standalone**: Purely local. Data stays on your device. No internet required.
+            *   **Sync**: Multi-device synchronization support. Keep your data consistent across devices.
+
+            ---

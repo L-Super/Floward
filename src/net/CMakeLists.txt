@@ -4,4 +4,5 @@ target_sources(${PROJECT_NAME} PUBLIC
         SyncServer.cpp SyncServer.h
         ProtocolRegistry.cpp ProtocolRegistry.h
         ProtocolHandler.cpp ProtocolHandler.h
+        UpdateManager.cpp UpdateManager.h
 )

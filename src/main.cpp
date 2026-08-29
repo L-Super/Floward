@@ -3,6 +3,7 @@
 #ifdef ENABLE_SYNC
 #include "net/ProtocolHandler.h"
 #include "net/ProtocolRegistry.h"
+#include "net/UpdateManager.h"
 #endif
 #include "utils/Config.h"
 #include "utils/Logger.hpp"
@@ -11,6 +12,10 @@
 
 #include <QApplication>
 #include <QDebug>
+#ifdef ENABLE_SYNC
+#include <QMessageBox>
+#include <QTimer>
+#endif
 #include <QPalette>
 #include <QStandardPaths>
 #include <QStyle>
@@ -101,6 +106,33 @@ int main(int argc, char* argv[]) {
 
   Clipboard c;
   c.show();
+
+#ifdef ENABLE_SYNC
+  UpdateManager updateManager(&a);
+  QObject::connect(&updateManager, &UpdateManager::updateAvailable, &c,
+                   [&updateManager](const UpdateInfo& info) {
+                     QMessageBox prompt(QMessageBox::Information, "Floward 更新",
+                                         QString("发现新版本 %1，是否下载并安装？").arg(info.version),
+                                         QMessageBox::Yes | QMessageBox::No);
+                     if (!info.notes.isEmpty())
+                       prompt.setDetailedText(info.notes);
+                     if (prompt.exec() == QMessageBox::Yes)
+                       updateManager.DownloadAndInstall();
+                   });
+  QObject::connect(&updateManager, &UpdateManager::failed, &c,
+                   [&c](const QString& message) {
+                     spdlog::warn("Update failed: {}", message.toStdString());
+
+                     if (message.contains("下载") || message.contains("MD5") ||
+                         message.contains("安装包")) {
+                       QMessageBox::warning(&c, "Floward 更新", message);
+                     }
+                   });
+  // 仅在用户开启「检查更新」时启动检测（默认开启）
+  if (Config::instance().get<bool>("check_update").value_or(true)) {
+    QTimer::singleShot(1500, &updateManager, &UpdateManager::CheckForUpdates);
+  }
+#endif
 
   QObject::connect(&a, &SingleApplication::instanceStarted, &c, &Clipboard::show);
   // 连接系统主题变化信号 Qt 6.5 support

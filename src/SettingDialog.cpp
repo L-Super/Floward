@@ -44,6 +44,10 @@ SettingDialog::SettingDialog(QWidget* parent)
   AutoStartup autoStartup;
   ui->autoStartupSwitchButton->setChecked(autoStartup.IsAutoStartup());
 
+  // 初始化「检查更新」开关，默认开启
+  bool checkUpdate = Config::instance().get<bool>("check_update").value_or(true);
+  ui->checkUpdateSwitchButton->setChecked(checkUpdate);
+
   // 初始化最大历史记录条数
   int maxHistory = Config::instance().get<int>("max_history").value_or(100);
   ui->maxHistorySpinBox->setValue(maxHistory);
@@ -79,6 +83,12 @@ SettingDialog::SettingDialog(QWidget* parent)
     else if (state == Qt::Unchecked) {
       autoStartup.SetAutoStartup(false);
     }
+  });
+  connect(ui->checkUpdateSwitchButton, &SwitchButton::checkStateChanged, this, [](Qt::CheckState state) {
+    bool enabled = state == Qt::Checked;
+    Config::instance().set("check_update", enabled);
+    Config::instance().save();
+    spdlog::info("Check for updates {}", enabled ? "enabled" : "disabled");
   });
   connect(ui->confirmButton, &QPushButton::clicked, this, &SettingDialog::OnSyncPageChanged);
 

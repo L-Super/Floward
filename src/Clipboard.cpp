@@ -4,6 +4,7 @@
 
 #include "Clipboard.h"
 #include "AboutDialog.h"
+#include "CustomMessageBox.h"
 #include "Item.h"
 #include "QHotkey"
 #include "SettingDialog.h"
@@ -31,7 +32,6 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QMenu>
-#include <QMessageBox>
 #include <QMimeData>
 #include <QPushButton>
 #include <QSizePolicy>
@@ -328,8 +328,9 @@ void Clipboard::InitShortcut() {
   // 设置快捷键
   hotkey->setShortcut(QKeySequence(shortcutStr), true);
   if (!hotkey->isRegistered()) {
-    QMessageBox::warning(this, "快捷键设置失败",
-                         QString("无法设置快捷键: %1\n请检查是否与其他程序冲突。").arg(shortcutStr));
+    CustomMessageBox::warning(this, "快捷键设置失败",
+                              QString("无法设置快捷键: %1").arg(shortcutStr),
+                              "请检查是否与其他程序冲突。");
     return;
   }
   spdlog::info("Registered global shortcut is {}", shortcutStr);

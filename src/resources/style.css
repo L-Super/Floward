@@ -171,3 +171,103 @@ QPushButton#confirmButton, QPushButton#keySequenceConfirmButton {
 QPushButton#confirmButton {
     font-size: 13px;
 }
+
+QDialog#CustomMessageBox {
+    background-color: #ffffff;
+    border: none;
+}
+
+QDialog#CustomMessageBox[messageType="warning"] {
+    border: none;
+}
+
+QFrame#panelFrame {
+    background: transparent;
+    border: none;
+}
+
+QLabel#badgeLabel {
+    background-color: #e9ecef;
+    color: #495057;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+QLabel#badgeLabel[messageType="information"],
+QLabel#badgeLabel[messageType="question"] {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+QLabel#badgeLabel[messageType="warning"] {
+    background-color: #fff3cd;
+    color: #b45309;
+}
+
+QLabel#titleLabel {
+    color: #0f172a;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+QLabel#bodyLabel {
+    color: #1e293b;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+QLabel#informativeLabel {
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+QTextBrowser#detailsBrowser {
+    background-color: #f8fafc;
+    color: #1f2937;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+QPushButton#secondaryButton {
+    background-color: #f8fafc;
+    color: #0f172a;
+    border: 1px solid #dbe3ec;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+QPushButton#secondaryButton:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+QPushButton#secondaryButton:pressed {
+    background-color: #e2e8f0;
+    border-color: #cbd5e1;
+}
+
+QPushButton#primaryButton {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: 1px solid #2563eb;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+QPushButton#primaryButton:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+QPushButton#primaryButton:pressed {
+    background-color: #1e40af;
+    border-color: #1e40af;
+}

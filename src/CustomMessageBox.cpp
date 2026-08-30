@@ -20,14 +20,6 @@ constexpr int kPreferredWidth = 540;
 constexpr int kMinimumWidth = 420;
 constexpr int kScreenMargin = 24;
 
-QString NativeWindowTitle() {
-#if defined(Q_OS_WIN)
-  return QString(QChar(0x200B));
-#else
-  return {};
-#endif
-}
-
 void RefreshStyle(QWidget* widget) {
   widget->style()->unpolish(widget);
   widget->style()->polish(widget);
@@ -89,7 +81,6 @@ CustomMessageBox::CustomMessageBox(QWidget* parent)
 
   setWindowFlags(flags);
   setAttribute(Qt::WA_StyledBackground, true);
-  QDialog::setWindowTitle(NativeWindowTitle());
 
   ui->panelFrame->setAttribute(Qt::WA_StyledBackground, true);
   ui->bodyLabel->clear();
@@ -117,7 +108,6 @@ void CustomMessageBox::setAnchorWidget(QWidget* widget) { anchorWidget_ = widget
 
 void CustomMessageBox::setTitle(const QString& title) {
   ui->titleLabel->setText(title);
-  QDialog::setWindowTitle(NativeWindowTitle());
 }
 
 void CustomMessageBox::setText(const QString& text) {
@@ -216,10 +206,6 @@ void CustomMessageBox::centerOnScreen() {
   const int maxWidth = std::max(320, availableGeometry.width() - kScreenMargin * 2);
   const int targetWidth = maxWidth >= kMinimumWidth ? std::min(kPreferredWidth, maxWidth) : maxWidth;
   setFixedWidth(targetWidth);
-
-  if (layout()) {
-    layout()->activate();
-  }
 
   const int maxHeight = std::max(220, availableGeometry.height() - kScreenMargin * 2);
   const int targetHeight = std::min(sizeHint().height(), maxHeight);

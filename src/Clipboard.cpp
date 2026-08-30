@@ -177,7 +177,6 @@ void Clipboard::DataChanged() {
       return;
     }
 
-
     // 限制最大像素数为 1 亿
     constexpr qint64 kMaxImagePixels = 100000000;
     const qint64 pixelCount = static_cast<qint64>(sourceImage.width()) * sourceImage.height();
@@ -191,7 +190,6 @@ void Clipboard::DataChanged() {
       spdlog::warn("Failed to convert clipboard image to RGBA8888");
       return;
     }
-
 
     qDebug() << "image format" << image.format();
     QByteArray ba;
@@ -275,6 +273,13 @@ void Clipboard::StayOnTop() {
   show();
   activateWindow();
   raise();
+
+  if (QWidget* modalWidget = QApplication::activeModalWidget(); modalWidget && modalWidget != this) {
+    modalWidget->raise();
+    modalWidget->activateWindow();
+    qDebug() << Q_FUNC_INFO << "modal widget activated";
+    return;
+  }
 }
 
 void Clipboard::InitTrayMenu() {
@@ -682,15 +687,22 @@ void Clipboard::closeEvent(QCloseEvent* event) {
 }
 
 bool Clipboard::eventFilter(QObject* obj, QEvent* event) {
+  QWidget* widget = qobject_cast<QWidget*>(obj);
+  const bool isChild = widget && (widget == this || isAncestorOf(widget));
 
-  if (event->type() == QEvent::WindowDeactivate) {
-    // 窗口停用
+  // 窗口停用
+  if (obj == this && event->type() == QEvent::WindowDeactivate) {
+    if (QApplication::activeModalWidget()) {
+      qDebug() << Q_FUNC_INFO << "has active modal widget";
+      return false;
+    }
+
     hide();
     return true;
   }
-  else if (event->type() == QEvent::KeyPress) {
-    // 按ESC键时隐藏窗口
+  else if (isChild && event->type() == QEvent::KeyRelease) {
     auto* keyEvent = dynamic_cast<QKeyEvent*>(event);
+    // 按ESC键时隐藏窗口
     if (keyEvent->key() == Qt::Key_Escape) {
       hide();
       return true;

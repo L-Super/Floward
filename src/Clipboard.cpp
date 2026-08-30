@@ -273,8 +273,8 @@ void Clipboard::StayOnTop() {
   }
 
   show();
-  activateWindow();
   raise();
+  activateWindow();
 }
 
 void Clipboard::InitTrayMenu() {
@@ -681,15 +681,14 @@ void Clipboard::closeEvent(QCloseEvent* event) {
 }
 
 bool Clipboard::eventFilter(QObject* obj, QEvent* event) {
-
+  // 窗口停用
   if (event->type() == QEvent::WindowDeactivate) {
-    // 窗口停用
     hide();
     return true;
   }
   else if (event->type() == QEvent::KeyPress) {
-    // 按ESC键时隐藏窗口
     auto* keyEvent = dynamic_cast<QKeyEvent*>(event);
+    // 按ESC键时隐藏窗口
     if (keyEvent->key() == Qt::Key_Escape) {
       hide();
       return true;

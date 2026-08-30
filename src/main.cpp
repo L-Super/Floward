@@ -1,4 +1,5 @@
 #include "Clipboard.h"
+#include "CustomMessageBox.h"
 #include "SingleApplication"
 #ifdef ENABLE_SYNC
 #include "net/ProtocolHandler.h"
@@ -12,10 +13,7 @@
 
 #include <QApplication>
 #include <QDebug>
-#ifdef ENABLE_SYNC
-#include <QMessageBox>
 #include <QTimer>
-#endif
 #include <QPalette>
 #include <QStandardPaths>
 #include <QStyle>
@@ -56,12 +54,12 @@ int main(int argc, char* argv[]) {
   auto logFilePath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/logs/app.log";
   initLogging(logFilePath.toStdString());
 
-  // 处理命令行参数中的协议URL
+  // 处理命令行参数中的协议 URL
   QString protocolUrl;
-  if (argc > 1) {
-    auto arguments = QString::fromLocal8Bit(argv[1]);
-    if (arguments.startsWith("floward://")) {
-      protocolUrl = arguments;
+  for (int i = 1; i < argc; ++i) {
+    const QString argument = QString::fromLocal8Bit(argv[i]);
+    if (argument.startsWith("floward://")) {
+      protocolUrl = argument;
     }
   }
 
@@ -103,29 +101,31 @@ int main(int argc, char* argv[]) {
   if (auto re = Config::instance().load(configFilePath.toStdString()); !re.has_value()) {
     spdlog::warn("Config file is unexpected. {}", re.error());
   }
-
   Clipboard c;
   c.show();
 
 #ifdef ENABLE_SYNC
   UpdateManager updateManager(&a);
   QObject::connect(&updateManager, &UpdateManager::updateAvailable, &c,
-                   [&updateManager](const UpdateInfo& info) {
-                     QMessageBox prompt(QMessageBox::Information, "Floward 更新",
-                                         QString("发现新版本 %1，是否下载并安装？").arg(info.version),
-                                         QMessageBox::Yes | QMessageBox::No);
-                     if (!info.notes.isEmpty())
-                       prompt.setDetailedText(info.notes);
-                     if (prompt.exec() == QMessageBox::Yes)
+                   [&updateManager, &c](const UpdateInfo& info) {
+                     const bool accepted = CustomMessageBox::question(
+                         &c,
+                         "Floward 更新",
+                         QString("发现新版本 %1").arg(info.version),
+                         "是否立即更新？会在后台下载，下载完成后弹出安装。",
+                         info.notes,
+                         "立即更新",
+                         "稍后");
+                     if (accepted)
                        updateManager.DownloadAndInstall();
                    });
   QObject::connect(&updateManager, &UpdateManager::failed, &c,
                    [&c](const QString& message) {
                      spdlog::warn("Update failed: {}", message.toStdString());
 
-                     if (message.contains("下载") || message.contains("MD5") ||
+                     if (message.contains("下载") || message.contains("SHA-256") ||
                          message.contains("安装包")) {
-                       QMessageBox::warning(&c, "Floward 更新", message);
+                       CustomMessageBox::warning(&c, "Floward 更新", message);
                      }
                    });
   // 仅在用户开启「检查更新」时启动检测（默认开启）

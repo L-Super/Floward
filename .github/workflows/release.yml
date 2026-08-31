@@ -262,7 +262,12 @@ jobs:
           }
 
           latest = {
-              "version": cmake_version,
+              # The client exposes a three-component VERSION_STR (for example
+              # 3.0.7), while CMake/Windows installers use a four-component
+              # version (3.0.7.0). Keep the update manifest aligned with the
+              # client-facing version so QVersionNumber does not report a
+              # perpetual 3.0.7.0 update over 3.0.7.
+              "version": tag_version,
               "notes": "",
               "platforms": {
                   platform: {
@@ -279,7 +284,7 @@ jobs:
           PY
 
       - name: Create release and upload artifacts
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             release-assets/*.exe

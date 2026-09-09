@@ -311,6 +311,7 @@ void Clipboard::CreateTrayAction() {
   connect(homeAction, &QAction::triggered, this, [this] {
     homeWidget->show();
     homeWidget->raise();
+    homeWidget->activateWindow();
   });
 
   connect(exitAction, &QAction::triggered, qApp, &QApplication::quit);
@@ -481,7 +482,15 @@ bool Clipboard::InitSyncServer() {
 
 void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
   switch (reason) {
-    case QSystemTrayIcon::Trigger:
+    case QSystemTrayIcon::Trigger: {
+#ifdef Q_OS_MACOS
+      if (trayIcon->contextMenu()) {
+        break;
+      }
+#endif
+      this->showNormal();
+    } break;
+
     case QSystemTrayIcon::DoubleClick: {
       this->showNormal();
     } break;

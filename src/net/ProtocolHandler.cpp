@@ -8,6 +8,11 @@
 #include "ClipboardStruct.h"
 #include "ProtocolCommon.h"
 
+#ifdef Q_OS_MACOS
+#include <QCoreApplication>
+#include <QEvent>
+#include <QFileOpenEvent>
+#endif
 #include <QDebug>
 #include <QRegularExpression>
 #include <QUrl>
@@ -18,6 +23,33 @@ const QString LOGIN_ACTION = "login";
 } // namespace
 
 ProtocolHandler::ProtocolHandler(QObject* parent) : QObject(parent) {}
+
+void ProtocolHandler::InstallUrlEventFilter() {
+#ifdef Q_OS_MACOS
+  // 仅 macOS 需要：协议 URL 经 Apple Event → QFileOpenEvent 投递；
+  // Windows/Linux 的 URL 走 argv / SingleApplication 转发，无需监听
+  if (auto* app = QCoreApplication::instance())
+    app->installEventFilter(this);
+#endif
+}
+
+#ifdef Q_OS_MACOS
+bool ProtocolHandler::eventFilter(QObject* watched, QEvent* event) {
+  if (event->type() == QEvent::FileOpen) {
+    const auto* openEvent = static_cast<const QFileOpenEvent*>(event);
+    const QUrl url = openEvent->url();
+    if (url.isValid() &&
+        url.scheme().compare(ProtocolConstants::DEFAULT_PROTOCOL_SCHEME, Qt::CaseInsensitive) == 0) {
+
+      spdlog::info("Protocol url from QFileOpenEvent: {}", url.toString().toStdString());
+
+      HandleProtocolUrl(url.toString());
+      return true;
+    }
+  }
+  return QObject::eventFilter(watched, event);
+}
+#endif  // Q_OS_MACOS
 
 void ProtocolHandler::HandleProtocolUrl(const QString& url) {
   if (!ValidateUrl(url)) {

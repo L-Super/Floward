@@ -94,6 +94,9 @@ int main(int argc, char* argv[]) {
   ProtocolRegistry protocolRegistry;
   if (!protocolRegistry.IsProtocolRegistered())
     protocolRegistry.RegisterProtocol();
+
+  ProtocolHandler protocolHandler;
+  protocolHandler.InstallUrlEventFilter();
 #endif
 
   auto configFilePath =
@@ -142,8 +145,6 @@ int main(int argc, char* argv[]) {
   });
 
 #ifdef ENABLE_SYNC
-  // 创建协议处理器
-  ProtocolHandler protocolHandler;
   QObject::connect(&a, &SingleApplication::receivedMessage, &protocolHandler,
                    [&protocolHandler](int instanceId, QByteArray message) {
                      qDebug() << "instance id:" << instanceId << "message:" << message;
@@ -174,6 +175,8 @@ int main(int argc, char* argv[]) {
   QObject::connect(&protocolHandler, &ProtocolHandler::errorOccurred,
                    [](const QString& errorMessage) { spdlog::error("Protocol url wrong. error:{}", errorMessage); });
 
+  // Windows/Linux：argv 路径
+  // macOS 的 QFileOpenEvent 路径见 ProtocolHandler::eventFilter）
   if (!protocolUrl.isEmpty()) {
     protocolHandler.HandleProtocolUrl(protocolUrl.toUtf8());
   }

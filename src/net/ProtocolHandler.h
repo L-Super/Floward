@@ -10,6 +10,8 @@
 #include <QString>
 #include <QVariantMap>
 
+class QEvent;
+
 class ProtocolHandler : public QObject {
   Q_OBJECT
 
@@ -23,12 +25,21 @@ public:
   // 解析URL参数
   QVariantMap ParseUrlParameters(const QString& url);
 
+  // 监听 QApplication 上的 QFileOpenEvent（macOS 上 floward:// 回调由
+  // Launch Services 经 Apple Event 投递
+  void InstallUrlEventFilter();
+
 signals:
   // 登录数据信号
   void loginDataReceived(UserInfo userInfo, const QVariantMap& additionalData);
 
   // 错误信号
   void errorOccurred(const QString& errorMessage);
+
+protected:
+#ifdef Q_OS_MACOS
+  bool eventFilter(QObject* watched, QEvent* event) override;
+#endif
 
 private:
   // 验证URL格式

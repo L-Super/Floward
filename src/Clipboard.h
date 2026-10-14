@@ -6,6 +6,7 @@
 
 #include "Item.h"
 
+#include <QElapsedTimer>
 #include <QSystemTrayIcon>
 #include <QWidget>
 #include <memory>
@@ -73,11 +74,20 @@ private:
   int maxHistoryCount{100};
   bool ignoreNextDataChange{false};
   bool ignoreNetDataChange{false};
+
 #ifdef Q_OS_MACOS
   QTimer* clipboardPollTimer{};
   int lastChangeCount{};
 #endif
 #ifdef ENABLE_SYNC
   std::unique_ptr<SyncServer> sync;
+  // Guard against sync echo-loops: when we write synced content into the
+  // clipboard we record its hash + timestamp. If the resulting dataChanged
+  // signal arrives within the window with matching content we treat it as
+  // an echo and skip re-uploading. The single-shot ignoreNetDataChange flag
+  // is unreliable on platforms that deliver dataChanged asynchronously
+  // (macOS polling, delayed Windows signals).
+  QByteArray lastSyncedHash;
+  QElapsedTimer lastSyncedTimer;
 #endif
 };

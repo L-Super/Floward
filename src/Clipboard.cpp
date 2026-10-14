@@ -240,6 +240,20 @@ void Clipboard::DataChanged() {
   }
 
 #ifdef ENABLE_SYNC
+  // Echo-loop guard: if the clipboard content matches what we just wrote
+  // from a sync notification within a short window, treat this dataChanged
+  // as an echo and skip re-uploading. This is more reliable than the
+  // single-shot ignoreNetDataChange flag on platforms with async delivery.
+  // Use isValid() in addition to the hash check so the timer is never read
+  // before it has been started.
+  if (!lastSyncedHash.isEmpty() && lastSyncedTimer.isValid() && lastSyncedTimer.elapsed() < 2000) {
+    if (hashValue == lastSyncedHash) {
+      lastSyncedHash.clear();
+      lastSyncedTimer.invalidate();
+      return;
+    }
+  }
+
   if (sync)
     sync->uploadClipboardData(clipData);
 #endif
@@ -397,6 +411,20 @@ bool Clipboard::InitSyncServer() {
             [this](bool success, const QImage& image, const QString& message) {
               if (success) {
                 spdlog::info("Image downloaded successfully, updating clipboard");
+                // Record PNG hash + timestamp so the echo-loop guard can
+                // recognize the resulting dataChanged signal as an echo
+                // of this sync write and skip re-uploading.
+                // NOTE: mirror the DataChanged() pipeline (convert to
+                // RGBA8888, save as PNG) so both sides compute the same
+                // hash for the same image.
+                QByteArray pngBytes;
+                {
+                  QBuffer buf(&pngBytes);
+                  buf.open(QIODevice::WriteOnly);
+                  image.convertToFormat(QImage::Format_RGBA8888).save(&buf, "PNG");
+                }
+                lastSyncedHash = QCryptographicHash::hash(pngBytes, QCryptographicHash::Md5).toHex();
+                lastSyncedTimer.start();
                 // 忽略下一次dataChanged信号
                 ignoreNetDataChange = true;
                 clipboard->setImage(image);
@@ -425,6 +453,12 @@ bool Clipboard::InitSyncServer() {
 
         if (type == "text") {
           if (!data.isEmpty()) {
+            // Record the content hash + timestamp so the echo-loop guard in
+            // DataChanged() can recognize the upcoming dataChanged signal as
+            // an echo of this sync write (it may arrive asynchronously on
+            // macOS/Windows) and skip re-uploading.
+            lastSyncedHash = QCryptographicHash::hash(data.toUtf8(), QCryptographicHash::Md5).toHex();
+            lastSyncedTimer.start();
             // 忽略下一次dataChanged信号
             ignoreNetDataChange = true;
             clipboard->setText(data);

@@ -4,6 +4,7 @@
 
 #include <QAbstractSocket>
 #include <QObject>
+#include <QSet>
 #include <QUrl>
 
 class ClipboardApiClient;
@@ -53,12 +54,19 @@ private slots:
   // 处理登录成功后的逻辑：保存 token 并（重新）启动 WebSocket
   void handleLoginFinished(bool success, const Token& token, const QString& message);
   bool verifyTokenValid(const QString& token);
+  // 收到 WebSocket 推送：去重 + 回 ACK，然后透传给上层
+  void onNotifyMessageReceived(const QString& message);
 
 private:
+  // 回 ACK：确认已收到某条推送消息
+  void sendAck(const QString& messageId);
+
   QUrl apiBaseUrl;
   QUrl wsBaseUrl;
   ClipboardApiClient* apiClient{};
   ClipboardWebSocketClient* wsClient{nullptr};
   QString authToken;
   bool isLoginSuccessful{};
+  // ACK 去重用：已处理过的 message_id（服务端超时重试会重复推送）
+  QSet<QString> ackedMessageIds;
 };

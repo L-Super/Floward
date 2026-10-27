@@ -44,6 +44,14 @@ bool ClipboardWebSocketClient::isConnected() const {
   return webSocket.state() == QAbstractSocket::ConnectedState;
 }
 
+void ClipboardWebSocketClient::sendTextMessage(const QString& message) {
+  if (webSocket.state() != QAbstractSocket::ConnectedState) {
+    spdlog::warn("sendTextMessage skipped: websocket not connected");
+    return;
+  }
+  webSocket.sendTextMessage(message);
+}
+
 void ClipboardWebSocketClient::onConnected() {
   emit connected();
   spdlog::info("WebSocket connected.");

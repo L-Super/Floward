@@ -4,10 +4,16 @@
 
 #include <QEventLoop>
 #include <QImage>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QTimer>
 #include <QUrlQuery>
 
 #include "../utils/Logger.hpp"
+
+namespace {
+constexpr int kMaxAckedMessageIds = 500; // ACK 去重集合上限，防止内存膨胀
+} // namespace
 
 SyncServer::SyncServer(const QUrl& apiBaseUrl, QObject* parent)
     : QObject(parent), apiClient(new ClipboardApiClient(apiBaseUrl, this)) {
@@ -81,6 +87,35 @@ void SyncServer::stopSync() {
   }
 }
 
+void SyncServer::sendAck(const QString& messageId) {
+  if (!wsClient) {
+    return;
+  }
+  QJsonObject ack;
+  ack["action"] = "ack";
+  ack["message_id"] = messageId;
+  wsClient->sendTextMessage(QString::fromUtf8(QJsonDocument(ack).toJson(QJsonDocument::Compact)));
+}
+
+void SyncServer::onNotifyMessageReceived(const QString& message) {
+  // 解析 message_id，去重并回 ACK；业务内容继续透传给上层
+  const auto doc = QJsonDocument::fromJson(message.toUtf8());
+  const QString messageId = doc.object().value("message_id").toString();
+  if (!messageId.isEmpty()) {
+    if (ackedMessageIds.contains(messageId)) {
+      spdlog::debug("Duplicate message_id {}, skip forwarding", messageId);
+      sendAck(messageId); // 上次 ACK 可能丢了，再回一次
+      return;
+    }
+    if (ackedMessageIds.size() >= kMaxAckedMessageIds) {
+      ackedMessageIds.clear();
+    }
+    ackedMessageIds.insert(messageId);
+    sendAck(messageId);
+  }
+  emit notifyMessageReceived(message);
+}
+
 void SyncServer::handleLoginFinished(bool success, const Token& token, const QString& message) {
   // 先把登录结果透传给调用方
   emit loginFinished(success, token, message);
@@ -111,7 +146,7 @@ void SyncServer::handleLoginFinished(bool success, const Token& token, const QSt
   connect(wsClient, &ClipboardWebSocketClient::connected, this, &SyncServer::syncConnected);
   connect(wsClient, &ClipboardWebSocketClient::disconnected, this, &SyncServer::syncDisconnected);
   connect(wsClient, &ClipboardWebSocketClient::errorOccurred, this, &SyncServer::syncError);
-  connect(wsClient, &ClipboardWebSocketClient::notifyMessageReceived, this, &SyncServer::notifyMessageReceived);
+  connect(wsClient, &ClipboardWebSocketClient::notifyMessageReceived, this, &SyncServer::onNotifyMessageReceived);
   connect(wsClient, &ClipboardWebSocketClient::reconnectExhausted, this, &SyncServer::reconnectExhausted);
 }
 

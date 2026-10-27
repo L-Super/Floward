@@ -19,6 +19,9 @@ public:
   // 检查连接状态
   bool isConnected() const;
 
+  // 发送一段文本消息到服务端（用于回 ACK / 心跳等）
+  void sendTextMessage(const QString& message);
+
 signals:
   void connected();
   void disconnected();
